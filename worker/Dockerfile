@@ -1,6 +1,3 @@
-# worker/Dockerfile
-
-# ---- Stage 1: install + build ----
 FROM node:24-alpine AS builder
 WORKDIR /app
 
@@ -13,7 +10,6 @@ RUN npx prisma generate
 COPY worker/ .
 RUN npm run build
 
-# ---- Stage 2: run only what's needed ----
 FROM node:24-alpine AS runner
 WORKDIR /app
 
