@@ -13,7 +13,7 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "type": "commonjs",
+  "type": "module",
     "dependencies": {
     "bullmq": "^5.x",
     "ioredis": "^5.x",
