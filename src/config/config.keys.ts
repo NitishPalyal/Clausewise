@@ -5,6 +5,7 @@ dotenv.config();
 const configKeys: CONFIG = {
   FRONTEND_URL: process.env.FRONTEND_URL || "",
   DATABASE_URL: process.env.DATABASE_URL || "",
+  NODE_ENV: process.env.NODE_ENV || "",
   REDIS_HOST: process.env.REDIS_HOST || "",
   REDIS_PORT: process.env.REDIS_PORT || "",
   B2_BUCKET_NAME: process.env.B2_BUCKET_NAME || "",
