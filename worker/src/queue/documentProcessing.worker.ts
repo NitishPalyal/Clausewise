@@ -1,7 +1,7 @@
 import { Worker } from "bullmq";
 import { connection } from "./documentProcessing.connection.ts";
 import { ingestionPipline } from "../rag/ingestionPipline.ts";
-
+ingestionPipline;
 export const QUEUE_NAME = "document-processing";
 
 export const documentWorker = new Worker(QUEUE_NAME, ingestionPipline, {
