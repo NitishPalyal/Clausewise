@@ -14,14 +14,18 @@
   "author": "",
   "license": "ISC",
   "type": "module",
-    "dependencies": {
+  "dependencies": {
+    "@langchain/community": "^1.1.29",
+    "@langchain/core": "^1.2.12",
+    "@prisma/client": "^6.x",
     "bullmq": "^5.x",
     "ioredis": "^5.x",
-    "@prisma/client": "^6.x"
+    "mammoth": "^1.12.3",
+    "pdf-parse": "^2.4.5"
   },
   "devDependencies": {
-    "typescript": "^5.x",
+    "@types/node": "^22.x",
     "tsx": "^4.x",
-    "@types/node": "^22.x"
+    "typescript": "^5.x"
   }
 }
