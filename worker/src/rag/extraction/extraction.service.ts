@@ -1,8 +1,9 @@
 import { fromPath } from "pdf2pic";
 import { createWorker } from "tesseract.js";
 import { Document } from "@langchain/core/documents";
-import { DocxLoader } from "@langchain/community/document_loaders/fs/docx";
 import { PDFLoader } from "@langchain/community/document_loaders/fs/pdf";
+import mammoth from "mammoth";
+import { parse, type HTMLElement } from "node-html-parser";
 import * as fs from "fs";
 import * as path from "path";
 import type { FileType } from "./extraction.types.ts";
@@ -131,14 +132,55 @@ async function loadPDFFile(fileBuffer: Buffer): Promise<Document[]> {
   return docs;
 }
 
+// async function loadDocxFile(fileBuffer: Buffer): Promise<Document[]> {
+//   const docxBlob = bufferToBlob(fileBuffer, "docx");
+
+//   const loader = new DocxLoader(docxBlob);
+
+//   const docs: Document[] = await loader.load();
+
+//   return docs;
+// }
+
+function tableToText(table: HTMLElement): string {
+  return table
+    .querySelectorAll("tr")
+    .map((row) =>
+      row
+        .querySelectorAll("td, th")
+        .map((c) => c.text.trim())
+        .join(" | "),
+    )
+    .join("\n");
+}
+
+function htmlToMarkdownText(html: string): string {
+  const root = parse(html);
+  const lines: string[] = [];
+  for (const node of root.childNodes) {
+    if (node.nodeType !== 1) continue;
+    const el = node as HTMLElement;
+    const tag = el.tagName?.toLowerCase();
+    if (tag && /^h[1-6]$/.test(tag))
+      lines.push(`${"#".repeat(Number(tag[1]))} ${el.text.trim()}`);
+    else if (tag === "table") lines.push(tableToText(el));
+    else if (tag === "ul" || tag === "ol")
+      for (const li of el.querySelectorAll("li"))
+        lines.push(`- ${li.text.trim()}`);
+    else if (el.text.trim()) lines.push(el.text.trim());
+  }
+  return lines.join("\n\n");
+}
+
 async function loadDocxFile(fileBuffer: Buffer): Promise<Document[]> {
-  const docxBlob = bufferToBlob(fileBuffer, "docx");
-
-  const loader = new DocxLoader(docxBlob);
-
-  const docs: Document[] = await loader.load();
-
-  return docs;
+  const { value: html } = await mammoth.convertToHtml({ buffer: fileBuffer });
+  const text = htmlToMarkdownText(html);
+  return [
+    new Document({
+      pageContent: text,
+      metadata: { headingFormat: "markdown" },
+    }),
+  ];
 }
 
 export async function extractText(fileBuffer: Buffer, fileType: FileType) {
