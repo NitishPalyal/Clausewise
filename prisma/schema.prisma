@@ -76,8 +76,8 @@ model DocumentVersion {
 }
 
 model Chunk {
-  id                String          @id @default(cuid())
-  tenantId          String // denormalized on purpose — see "why" below
+  id                String                      @id @default(cuid())
+  tenantId          String
   documentVersionId String
   sectionPath       String
   sectionLevel      Int
@@ -85,7 +85,8 @@ model Chunk {
   pageStart         Int?
   pageEnd           Int?
   text              String
-  documentVersion   DocumentVersion @relation(fields: [documentVersionId], references: [id])
+  embedding         Unsupported("vector(768)")?
+  documentVersion   DocumentVersion             @relation(fields: [documentVersionId], references: [id])
 
   @@index([tenantId])
 }
