@@ -21,6 +21,7 @@
     "bullmq": "^5.x",
     "ioredis": "^5.x",
     "mammoth": "^1.12.3",
+    "node-html-parser": "^9.0.4",
     "pdf-parse": "^2.4.5",
     "pdf2pic": "^3.2.0",
     "tesseract.js": "^7.0.0"
