@@ -2,6 +2,7 @@ FROM node:24-alpine AS builder
 WORKDIR /app
 
 COPY worker/package*.json ./
+RUN apk add --no-cache graphicsmagick ghostscript
 RUN npm ci
 
 COPY prisma ./prisma
