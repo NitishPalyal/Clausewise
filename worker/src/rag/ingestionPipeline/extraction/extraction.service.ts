@@ -8,17 +8,11 @@ import * as fs from "fs";
 import * as path from "path";
 import type { FileType } from "./extraction.types.ts";
 
-function bufferToBlob(fileBuffer: Buffer, fileType: FileType): Blob {
+function bufferToBlob(fileBuffer: Buffer): Blob {
   const arrayBuffer = fileBuffer.buffer.slice(
     fileBuffer.byteOffset,
     fileBuffer.byteOffset + fileBuffer.byteLength,
   ) as ArrayBuffer;
-
-  if (fileType === "docx") {
-    return new Blob([arrayBuffer], {
-      type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-    });
-  }
 
   return new Blob([arrayBuffer], {
     type: "application/pdf",
@@ -102,7 +96,7 @@ async function processWithOCR(fileBuffer: Buffer): Promise<Document[]> {
 }
 
 async function loadPDFFile(fileBuffer: Buffer): Promise<Document[]> {
-  const pdfBlob = bufferToBlob(fileBuffer, "pdf");
+  const pdfBlob = bufferToBlob(fileBuffer);
   const loader = new PDFLoader(pdfBlob, {
     splitPages: true,
   });
