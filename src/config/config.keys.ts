@@ -12,6 +12,7 @@ const configKeys: CONFIG = {
   B2_KEY_ID: process.env.B2_KEY_ID || "",
   B2_APPLICATION_KEY: process.env.B2_APPLICATION_KEY || "",
   B2_ENDPOINT: process.env.B2_ENDPOINT || "",
+  GEMINI_API_KEY: process.env.GEMINI_API_KEY || "",
 };
 
 export default configKeys;

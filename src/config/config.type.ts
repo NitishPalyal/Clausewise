@@ -8,4 +8,5 @@ export type CONFIG = {
   readonly B2_KEY_ID: string;
   readonly B2_APPLICATION_KEY: string;
   readonly B2_ENDPOINT: string;
+  readonly GEMINI_API_KEY: string;
 };
