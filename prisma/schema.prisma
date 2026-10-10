@@ -28,6 +28,7 @@ model User {
   email       String
   role        Role   @default(MEMBER)
   tenant      Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  chats       Chat[]
 
   @@index([tenantId])
 }
@@ -89,4 +90,35 @@ model Chunk {
   documentVersion   DocumentVersion             @relation(fields: [documentVersionId], references: [id])
 
   @@index([tenantId])
+}
+
+model Chat {
+  id        String   @id @default(cuid())
+  title     String
+  userId    String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  messages Message[]
+
+  @@unique([userId, title])
+  @@index([userId])
+}
+
+enum MessageRole {
+  user
+  ai
+}
+
+model Message {
+  id        String      @id @default(cuid())
+  chatId    String
+  role      MessageRole
+  content   String
+  timestamp DateTime    @default(now())
+
+  chat Chat @relation(fields: [chatId], references: [id], onDelete: Cascade)
+
+  @@index([chatId])
 }
