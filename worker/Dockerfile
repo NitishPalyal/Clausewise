@@ -14,6 +14,8 @@ RUN npm run build
 FROM node:24-alpine AS runner
 WORKDIR /app
 
+RUN apk add --no-cache graphicsmagick ghostscript
+
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/prisma ./prisma
