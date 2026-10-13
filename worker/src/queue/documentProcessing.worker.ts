@@ -1,18 +1,50 @@
-import { Worker } from "bullmq";
+import { Job, Worker } from "bullmq";
 import { connection } from "./documentProcessing.connection.ts";
 import { ingestionPipline } from "../rag/ingestionPipeline/ingestionPipeline.ts";
+import { documentProcessingJobDataSchema } from "./documentProcessing.schema.ts";
+import {
+  setStatusFailed,
+  setStatusUploaded,
+  setStatusUploading,
+} from "../repository/documentVersion/documentVersion.repository.ts";
 
 export const QUEUE_NAME = "document-processing";
 
-export const documentWorker = new Worker(QUEUE_NAME, ingestionPipline, {
-  connection,
-  concurrency: 5, // how many documents this worker handles at once
+export const documentWorker = new Worker(
+  QUEUE_NAME,
+  async (job) => {
+    const jobPayload = documentProcessingJobDataSchema.parse(job.data);
+    await ingestionPipline({
+      tenantId: jobPayload.tenantId,
+      fileType: jobPayload.fileType,
+      documentVersionId: jobPayload.documentVersionId,
+      fileBuffer: jobPayload.fileBuffer,
+    });
+  },
+  {
+    connection,
+    concurrency: 5, // how many documents this worker handles at once
+    limiter: { max: 5, duration: 1000 },
+  },
+);
+
+documentWorker.on("active", async (job) => {
+  const jobPayload = documentProcessingJobDataSchema.parse(job.data);
+  await setStatusUploading(jobPayload.documentVersionId);
+  // console.log(`Job ${job.id} completed`);
 });
 
-documentWorker.on("completed", (job) => {
-  console.log(`Job ${job.id} completed`);
+documentWorker.on("completed", async (job) => {
+  const jobPayload = documentProcessingJobDataSchema.parse(job.data);
+  await setStatusUploaded(jobPayload.documentVersionId);
+  // console.log(`Job ${job.id} completed`);
 });
 
-documentWorker.on("failed", (job, err) => {
-  console.error(`Job ${job?.id} failed:`, err);
+documentWorker.on("failed", async (job, err) => {
+  if (job) {
+    const jobPayload = documentProcessingJobDataSchema.parse(job.data);
+    await setStatusFailed(jobPayload.documentVersionId);
+  }
+
+  // console.error(`Job ${job?.id} failed:`, err);
 });
