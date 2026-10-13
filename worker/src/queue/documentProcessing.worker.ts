@@ -3,10 +3,10 @@ import { connection } from "./documentProcessing.connection.ts";
 import { ingestionPipline } from "../rag/ingestionPipeline/ingestionPipeline.ts";
 import { documentProcessingJobDataSchema } from "./documentProcessing.schema.ts";
 import {
-  setStatusFailed,
-  setStatusUploaded,
-  setStatusUploading,
-} from "../repository/documentVersion/documentVersion.repository.ts";
+  setStatusFailedService,
+  setStatusUploadedService,
+  setStatusUploadingService,
+} from "../service/documentProcessing.service.ts";
 
 export const QUEUE_NAME = "document-processing";
 
@@ -30,20 +30,20 @@ export const documentWorker = new Worker(
 
 documentWorker.on("active", async (job) => {
   const jobPayload = documentProcessingJobDataSchema.parse(job.data);
-  await setStatusUploading(jobPayload.documentVersionId);
+  await setStatusUploadingService(jobPayload.documentVersionId);
   // console.log(`Job ${job.id} completed`);
 });
 
 documentWorker.on("completed", async (job) => {
   const jobPayload = documentProcessingJobDataSchema.parse(job.data);
-  await setStatusUploaded(jobPayload.documentVersionId);
+  await setStatusUploadedService(jobPayload.documentVersionId);
   // console.log(`Job ${job.id} completed`);
 });
 
 documentWorker.on("failed", async (job, err) => {
   if (job) {
     const jobPayload = documentProcessingJobDataSchema.parse(job.data);
-    await setStatusFailed(jobPayload.documentVersionId);
+    await setStatusFailedService(jobPayload.documentVersionId);
   }
 
   // console.error(`Job ${job?.id} failed:`, err);
