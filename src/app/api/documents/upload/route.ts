@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { enqueueDocumentProcessing } from "@/lib/queue";
 import { documentUploadSchema } from "@/schema/api.schema";
-import { APIResponse } from "@/shared/types";
+import { APIResponse } from "@/shared/types.ts";
 
 export async function POST(req: NextRequest) {
   const { userId } = await auth();
