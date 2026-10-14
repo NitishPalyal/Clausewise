@@ -61,7 +61,13 @@ model Document {
 
   @@index([tenantId, type])
 }
-
+enum Status {
+  pending
+  uploading
+  failed
+  uploded
+  delayed
+}
 model DocumentVersion {
   id            String    @id @default(cuid())
   documentId    String
@@ -69,6 +75,7 @@ model DocumentVersion {
   fileUrl       String // Backblaze B2 URL
   isCurrent     Boolean   @default(true)
   expiryDate    DateTime? // for vendor certificates
+  status        Status    @default(pending)
   uploadedAt    DateTime  @default(now())
   document      Document  @relation(fields: [documentId], references: [id])
   chunks        Chunk[]
