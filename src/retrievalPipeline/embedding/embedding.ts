@@ -1,13 +1,6 @@
+import { EMBEDDING_DIMENSIONS, MAX_RETRIES, MODEL } from "@/shared/variable.ts";
 import ai from "../../../worker/src/lib/ai.ts";
-
-const MODEL = "gemini-embedding-001";
-const DIMENSIONS = 768;
-const MAX_RETRIES = 3;
-
-export type EmbeddedQuery = {
-  query: string;
-  embedding: number[];
-};
+import { EmbeddedQuery } from "./embedding.types.ts";
 
 export function normalize(vector: number[]): number[] {
   const magnitude = Math.sqrt(
@@ -44,7 +37,7 @@ async function callGemini(query: string): Promise<number[]> {
     contents: query,
     config: {
       taskType: "RETRIEVAL_QUERY",
-      outputDimensionality: DIMENSIONS,
+      outputDimensionality: EMBEDDING_DIMENSIONS,
     },
   });
 
