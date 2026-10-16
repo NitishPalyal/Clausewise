@@ -1,12 +1,17 @@
-// export async function retrievalPipeline(
-//   search: string,
-//   tenantId: string,
-// ): Promise<{ response: string; citations: string[] }> {
-//   const embedding = await embedding(search);
-//   const vectors = await chunk.vectorSreach(embedding, 20);
-//   const reranked = await rerank(vectors);
-//   const prompt = await generatePrompt(reranked);
-//   const response = await generateResponse(prompt);
-//   const citations = await parseCitations(response);
-//   return { response, citations };
-// }
+import { embedQuery } from "./embedding/embedding";
+import { generateResponse } from "./generation/generation";
+import { GenerationResult } from "./generation/generation.types";
+import { rerankVectors } from "./rerank/rerank";
+import { vectorSearch } from "./vectorSearch/vectorSearch";
+
+export async function retrievalPipeline(
+  searchQuery: string,
+  tenantId: string,
+): Promise<{ response: GenerationResult; citations: string[] }> {
+  const { query, embedding } = await embedQuery(searchQuery);
+  const vectors = await vectorSearch(embedding, tenantId, 20);
+  const rerankedVectors = await rerankVectors(query, vectors);
+  const response = await generateResponse(query, rerankedVectors);
+  const citations = await parseCitations(response);
+  return { response, citations };
+}
