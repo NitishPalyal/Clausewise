@@ -2,7 +2,7 @@
 import { Queue } from "bullmq";
 import configKeys from "@/config/config.keys";
 import { connection } from "@/shared/connection";
-import { enqueueDocumentProcessingParam } from "@/schema/api.schema";
+import type { DocumentProcessingJobData } from "@/shared/types";
 
 const globalForQueue = globalThis as unknown as { documentQueue: Queue };
 
@@ -14,13 +14,8 @@ if (configKeys.NODE_ENV !== "production") {
   globalForQueue.documentQueue = documentQueue;
 }
 
-interface DocumentJobData {
-  documentVersionId: string;
-  fileUrl: string;
-}
-
 export async function enqueueDocumentProcessing(
-  data: enqueueDocumentProcessingParam,
+  data: DocumentProcessingJobData,
 ) {
   await documentQueue.add("process", data);
 }
