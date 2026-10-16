@@ -2,7 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { enqueueDocumentProcessing } from "@/lib/queue";
 import { documentUploadSchema } from "@/schema/api.schema";
-import { APIResponse } from "@/shared/types.ts";
+import type { APIResponse, FileType } from "@/shared/types.ts";
+import { uploadToStorageService } from "../../../../../worker/src/backblaze/backblaze.service.ts";
+import { getFileType } from "@/lib/helper/getFileType.helper.ts";
+import { FolderName } from "../../../../../worker/src/backblaze/backblaze.types.ts";
 
 export async function POST(req: NextRequest) {
   const { userId } = await auth();
@@ -10,10 +13,15 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const body: unknown = await req.json();
-  const requestBody = documentUploadSchema.safeParse(body);
+  const formData = await req.formData();
 
-  if (!requestBody.success) {
+  const result = documentUploadSchema.safeParse({
+    tenantId: formData.get("tenantId"),
+    documentVersionId: formData.get("documentVersionId"),
+    file: formData.get("file"),
+  });
+
+  if (!result.success) {
     const response: APIResponse = {
       success: false,
       message: "Invalid request data",
@@ -24,7 +32,38 @@ export async function POST(req: NextRequest) {
     };
     return NextResponse.json(response, { status: 400 });
   }
-  await enqueueDocumentProcessing(requestBody.data);
+
+  const { tenantId, documentVersionId, file } = result.data;
+
+  let fileType: FileType;
+  try {
+    fileType = getFileType(file);
+  } catch {
+    const response: APIResponse = {
+      success: false,
+      message: "Unsupported file type",
+      data: null,
+      error: {
+        code: "UNSUPPORTED_FILE_TYPE",
+      },
+    };
+    return NextResponse.json(response, { status: 400 });
+  }
+
+  const uploadedFileKey = await uploadToStorageService({
+    buffer: Buffer.from(await file.arrayBuffer()),
+    fileType,
+    folderName: FolderName.documents,
+    originalname: file.name,
+    tenantId,
+  });
+
+  await enqueueDocumentProcessing({
+    uploadedFileKey,
+    fileType,
+    documentVersionId,
+    tenantId,
+  });
 
   const response: APIResponse = {
     success: true,
