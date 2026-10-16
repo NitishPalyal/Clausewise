@@ -18,7 +18,7 @@ export const documentWorker = new Worker(
       tenantId: jobPayload.tenantId,
       fileType: jobPayload.fileType,
       documentVersionId: jobPayload.documentVersionId,
-      fileBuffer: jobPayload.fileBuffer,
+      uploadedFileKey: jobPayload.uploadedFileKey,
     });
   },
   {
