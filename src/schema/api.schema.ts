@@ -1,9 +1,8 @@
 import * as z from "zod";
 export const documentUploadSchema = z.object({
-  tenantId: z.string(),
-  fileType: z.enum(["pdf", "docx"]),
-  documentVersionId: z.string(),
-  file: z.file(),
+  tenantId: z.string().min(1),
+  documentVersionId: z.string().min(1),
+  file: z.file().max(10 * 1024 * 1024), // 10 MB
 });
 
 export type enqueueDocumentProcessingParam = z.infer<
