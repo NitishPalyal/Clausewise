@@ -1,6 +1,6 @@
 import crypto from "node:crypto";
 import type { generateFileKeyParam } from "./backblaze.types.ts";
-import type { FileType } from "../rag/ingestionPipeline/extraction/extraction.types.ts";
+import type { FileType } from "../ingestionPipeline/extraction/extraction.types.ts";
 
 const FILE_TYPE_EXTENSIONS: Record<FileType, string> = {
   pdf: ".pdf",

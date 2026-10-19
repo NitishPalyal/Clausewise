@@ -1,4 +1,4 @@
-import type { FileType } from "../rag/ingestionPipeline/extraction/extraction.types.ts";
+import type { FileType } from "../ingestionPipeline/extraction/extraction.types.ts";
 
 export const FILE_TYPE_MIME_TYPES: Record<FileType, string> = {
   pdf: "application/pdf",
