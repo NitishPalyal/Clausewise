@@ -1,6 +1,6 @@
 // worker/src/rag/chunking/chunking.ts
 import { getEncoding } from "js-tiktoken";
-import type { Section } from "../detect-structure/structure.types.ts";
+import type { Section } from "../detect-structure/detect-structure.types.ts";
 import type { Chunk } from "./chunking.types.ts";
 
 const CHUNK_SIZE = 600;
