@@ -1,6 +1,13 @@
 // worker/src/rag/detect-structure/detect-structure.ts
 import type { Document } from "@langchain/core/documents";
-import type { DetectionMethod, Section } from "./structure.types.ts";
+import type {
+  DetectionMethod,
+  Section,
+  ChainNode,
+  Heading,
+  NumberedCandidate,
+  PageSpan,
+} from "./detect-structure.types.ts";
 
 /* ────────────────────────────────────────────────────────────────
    Settings — small numbers you can tune after testing on real SOPs
@@ -20,33 +27,6 @@ const MARKED_LINE = /^(#{1,6})\s+(.+?)\s*$/;
 
 // A number typed inside a heading's text: "3.1 Material Inspection"
 const LEADING_NUMBER = /^(\d{1,2}(?:\.\d{1,2}){0,3})[.)]?\s+(.+)$/;
-
-/* ────────────────────────────────────────────────────────────────
-   Small internal types
-   ──────────────────────────────────────────────────────────────── */
-interface Heading {
-  lineStart: number; // where the heading line begins in the joined text
-  lineEnd: number; // where it ends (just before the newline)
-  depth: number;
-  sectionNumber: string | null;
-  title: string;
-}
-
-interface NumberedCandidate extends Heading {
-  numbers: number[]; // "3.1" → [3, 1]
-}
-
-interface PageSpan {
-  pageNumber: number | null; // null for DOCX
-  start: number; // where this page's text begins in the joined text
-  end: number; // where it ends
-}
-
-interface ChainNode {
-  candidate: NumberedCandidate;
-  length: number; // headings in the outline so far, counting this one
-  previous: ChainNode | null;
-}
 
 /* ────────────────────────────────────────────────────────────────
    STEP 1 — join all pages into ONE string, but remember where each page is
