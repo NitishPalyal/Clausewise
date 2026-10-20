@@ -1,6 +1,5 @@
 import { EMBEDDING_DIMENSIONS, MAX_RETRIES, MODEL } from "@/shared/variable.ts";
 import ai from "../../../worker/src/lib/ai.ts";
-import { EmbeddedQuery } from "./embedding.types.ts";
 
 export function normalize(vector: number[]): number[] {
   const magnitude = Math.sqrt(
@@ -51,7 +50,7 @@ async function callGemini(query: string): Promise<number[]> {
 export async function embedQuery(
   query: string,
   embedFn: (query: string) => Promise<number[]> = callGemini,
-): Promise<EmbeddedQuery> {
+): Promise<number[]> {
   const embedding = await embedBatchWithRetry(query, embedFn);
-  return { query, embedding };
+  return embedding;
 }
