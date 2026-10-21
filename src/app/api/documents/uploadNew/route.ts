@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { enqueueDocumentProcessing } from "@/lib/queue";
 import { getFileType } from "@/lib/helper/getFileType.helper.ts";
-import { createDocumentUploadSchema } from "@/schema/api.schema";
+import { createDocumentUploadSchema } from "@/schema/documentApi.schema.ts";
 import type { APIResponse, FileType } from "@/shared/types.ts";
 import * as DocumentVersionRepo from "@/repository/documentVersion/documentVersion.repository.ts";
 import * as TenantRepo from "@/repository/tetant/tetant.repository.ts";

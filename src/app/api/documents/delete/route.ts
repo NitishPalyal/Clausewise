@@ -2,7 +2,7 @@ import { auth } from "@clerk/nextjs/server";
 import { NextRequest, NextResponse } from "next/server";
 import { deleteFromStorageService } from "../../../../../worker/src/backblaze/backblaze.service.ts";
 import { errorResponse } from "@/lib/helper/errorResponse.helper.ts";
-import { documentDeleteSchema } from "@/schema/api.schema";
+import { documentDeleteSchema } from "@/schema/documentApi.schema.ts";
 import type { APIResponse } from "@/shared/types.ts";
 import * as DocumentRepo from "@/repository/document/document.repository.ts";
 import * as UserRepo from "@/repository/user/user.repository.ts";
@@ -53,7 +53,10 @@ export async function DELETE(request: NextRequest) {
   if (cleanupFailures.length > 0) {
     cleanupFailures.forEach((failure) => {
       if (failure.status === "rejected") {
-        console.error("Failed to delete document storage object", failure.reason);
+        console.error(
+          "Failed to delete document storage object",
+          failure.reason,
+        );
       }
     });
     return errorResponse(

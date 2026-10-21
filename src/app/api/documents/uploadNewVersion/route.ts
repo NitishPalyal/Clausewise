@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { enqueueDocumentProcessing } from "@/lib/queue";
 import { errorResponse } from "@/lib/helper/errorResponse.helper.ts";
 import { getFileType } from "@/lib/helper/getFileType.helper.ts";
-import { createDocumentVersionUploadSchema } from "@/schema/api.schema";
+import { createDocumentVersionUploadSchema } from "@/schema/documentApi.schema.ts";
 import type { APIResponse, FileType } from "@/shared/types.ts";
 import * as DocumentRepo from "@/repository/document/document.repository.ts";
 import * as DocumentVersionRepo from "@/repository/documentVersion/documentVersion.repository.ts";

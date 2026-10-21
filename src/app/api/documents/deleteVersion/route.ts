@@ -2,7 +2,7 @@ import { auth } from "@clerk/nextjs/server";
 import { NextRequest, NextResponse } from "next/server";
 import { deleteFromStorageService } from "../../../../../worker/src/backblaze/backblaze.service.ts";
 import { errorResponse } from "@/lib/helper/errorResponse.helper.ts";
-import { documentVersionDeleteSchema } from "@/schema/api.schema";
+import { documentVersionDeleteSchema } from "@/schema/documentApi.schema.ts";
 import type { APIResponse } from "@/shared/types.ts";
 import * as DocumentVersionRepo from "@/repository/documentVersion/documentVersion.repository.ts";
 import * as UserRepo from "@/repository/user/user.repository.ts";
