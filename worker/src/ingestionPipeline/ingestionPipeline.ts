@@ -17,7 +17,7 @@ export async function ingestionPipline({
   const sections = detectStructure(rawText); // ← other thread
   const chunks = chunkBySection(sections); // ← other thread
   const embedded = await embedChunks(chunks); // ← other thread
-  // await prisma.chunk.createMany({
-  //   data: embedded.map((c) => ({ ...c, documentVersionId, tenantId })),
-  // });
+  await prisma.chunk.createMany({
+    data: embedded.map((c) => ({ ...c, documentVersionId, tenantId })),
+  });
 }
