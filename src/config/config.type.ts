@@ -1,5 +1,8 @@
 export type CONFIG = {
   readonly FRONTEND_URL: string;
+  readonly SOCKET_PORT: string;
+  readonly CLERK_SECRET_KEY: string;
+  readonly NEXT_PUBLIC_REALTIME_URL: string;
   readonly DATABASE_URL: string;
   readonly NODE_ENV: string;
   readonly REDIS_HOST: string;
