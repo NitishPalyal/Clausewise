@@ -72,22 +72,24 @@ export function ChatInput({
       >
         {/* Attach file — placeholder */}
         <Tooltip>
-          <TooltipTrigger>
-            <Button
-              id="attach-file-button"
-              type="button"
-              variant="ghost"
-              size="icon"
-              disabled={isLoading}
-              className="h-8 w-8 shrink-0 text-muted-foreground hover:text-foreground mb-0.5"
-              aria-label="Attach a document (coming soon)"
-              onClick={() => {
-                /* TODO: trigger document upload flow when implemented */
-              }}
-            >
-              <Paperclip className="h-4 w-4" aria-hidden="true" />
-            </Button>
-          </TooltipTrigger>
+          <TooltipTrigger
+            render={
+              <Button
+                id="attach-file-button"
+                type="button"
+                variant="ghost"
+                size="icon"
+                disabled={isLoading}
+                className="mb-0.5 h-8 w-8 shrink-0 text-muted-foreground hover:text-foreground"
+                aria-label="Attach a document (coming soon)"
+                onClick={() => {
+                  /* TODO: trigger document upload flow when implemented */
+                }}
+              >
+                <Paperclip className="h-4 w-4" aria-hidden="true" />
+              </Button>
+            }
+          />
           <TooltipContent side="top" className="text-xs">
             Attach a document (coming soon)
           </TooltipContent>
@@ -116,31 +118,38 @@ export function ChatInput({
 
         {/* Send button */}
         <Tooltip>
-          <TooltipTrigger>
-            <Button
-              id="send-message-button"
-              type="button"
-              size="icon"
-              disabled={!canSend}
-              onClick={onSend}
-              aria-label={
-                isLoading ? "Searching…" : "Send question (Ctrl+Enter)"
-              }
-              className={cn(
-                "h-8 w-8 shrink-0 mb-0.5 rounded-lg transition-all duration-150",
-                canSend
-                  ? "text-white shadow-sm hover:opacity-90"
-                  : "bg-muted text-muted-foreground",
-              )}
-              style={canSend ? { background: "var(--brand-navy)" } : undefined}
-            >
-              {isLoading ? (
-                <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
-              ) : (
-                <Send className="h-4 w-4" aria-hidden="true" />
-              )}
-            </Button>
-          </TooltipTrigger>
+          <TooltipTrigger
+            render={
+              <Button
+                id="send-message-button"
+                type="button"
+                size="icon"
+                disabled={!canSend}
+                onClick={onSend}
+                aria-label={
+                  isLoading ? "Searching…" : "Send question (Ctrl+Enter)"
+                }
+                className={cn(
+                  "mb-0.5 h-8 w-8 shrink-0 rounded-lg transition-all duration-150",
+                  canSend
+                    ? "text-primary-foreground shadow-sm hover:opacity-90"
+                    : "bg-muted text-muted-foreground",
+                )}
+                style={
+                  canSend ? { background: "var(--brand-navy)" } : undefined
+                }
+              >
+                {isLoading ? (
+                  <Loader2
+                    className="h-4 w-4 animate-spin"
+                    aria-hidden="true"
+                  />
+                ) : (
+                  <Send className="h-4 w-4" aria-hidden="true" />
+                )}
+              </Button>
+            }
+          />
           <TooltipContent side="top" className="text-xs">
             {isLoading ? "Searching…" : "Send (Ctrl+Enter)"}
           </TooltipContent>

@@ -9,7 +9,7 @@
 import { User, Sparkles, AlertCircle } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { CitationCard } from "@/components/dashboard/citation-card";
-import type { ChatMessage } from "@/lib/mock-data";
+import type { ChatMessage } from "@/types/chat-types";
 import { cn } from "@/lib/utils";
 
 interface ChatMessageProps {
@@ -59,10 +59,10 @@ export function ChatMessageItem({ message }: ChatMessageProps) {
       {/* ── Avatar ────────────────────────────────────────────────────────── */}
       <div
         className={cn(
-          "flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-white shadow-sm",
-          isUser ? "bg-muted text-muted-foreground" : "text-white",
+          "flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-primary-foreground shadow-sm",
+          isUser ? "bg-muted text-muted-foreground" : undefined,
         )}
-        style={!isUser ? { background: "var(--brand-navy)" } : undefined}
+        style={!isUser ? { background: "var(--primary)" } : undefined}
         aria-hidden="true"
       >
         {isUser ? (
@@ -122,7 +122,7 @@ export function ChatMessageItem({ message }: ChatMessageProps) {
             </p>
             {message.citations.map((citation, i) => (
               <CitationCard
-                key={citation.id}
+                key={`${citation.documentTitle}-${citation.marker}-${i}`}
                 citation={citation}
                 index={i + 1}
               />

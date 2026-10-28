@@ -15,25 +15,22 @@ import {
   SearchCode,
   FolderOpen,
   Settings,
-  Clock,
   ChevronRight,
 } from "lucide-react";
 import { OrganizationSwitcher, UserButton } from "@clerk/nextjs";
+import { useClerkAppearance } from "@/hooks/use-clerk-appearance";
 import {
   Sidebar,
   SidebarContent,
   SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
-  SidebarGroupLabel,
   SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarSeparator,
 } from "@/components/ui/sidebar";
-import { Badge } from "@/components/ui/badge";
-import { RECENT_SEARCHES } from "@/lib/mock-data";
 
 const NAV_ITEMS = [
   {
@@ -60,6 +57,7 @@ const NAV_ITEMS = [
 ] as const;
 
 export function AppSidebar() {
+  const clerkAppearance = useClerkAppearance();
   const pathname = usePathname();
 
   return (
@@ -70,10 +68,10 @@ export function AppSidebar() {
           {/* ClauseWise wordmark */}
           <div
             className="flex h-8 w-8 items-center justify-center rounded-lg shrink-0"
-            style={{ background: "var(--brand-navy)" }}
+            style={{ background: "var(--primary)" }}
             aria-hidden="true"
           >
-            <SearchCode className="h-4 w-4 text-white" />
+            <SearchCode className="h-4 w-4 text-primary-foreground" />
           </div>
           <div className="flex flex-col group-data-[collapsible=icon]:hidden">
             <span className="text-sm font-semibold tracking-tight text-foreground leading-none">
@@ -89,12 +87,14 @@ export function AppSidebar() {
         <div className="mt-3 group-data-[collapsible=icon]:hidden">
           <OrganizationSwitcher
             hidePersonal
+            organizationProfileProps={{ appearance: clerkAppearance }}
             appearance={{
+              ...clerkAppearance,
               elements: {
                 rootBox: "w-full",
                 organizationSwitcherTrigger:
-                  "w-full justify-between rounded-md border border-border px-3 py-2 text-sm hover:bg-muted transition-colors",
-              },
+                    "w-full justify-between rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground hover:bg-accent hover:text-accent-foreground transition-colors",
+                },
             }}
           />
         </div>
@@ -138,72 +138,19 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
 
-        <SidebarSeparator />
-
-        {/* ── Recent Searches ────────────────────────────────────────────── */}
-        <SidebarGroup className="group-data-[collapsible=icon]:hidden">
-          <SidebarGroupLabel className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground uppercase tracking-wider">
-            <Clock className="h-3 w-3" aria-hidden="true" />
-            Recent searches
-          </SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {RECENT_SEARCHES.slice(0, 5).map((item) => (
-                <SidebarMenuItem key={item.id}>
-                  <SidebarMenuButton
-                    className="h-auto py-1.5 text-xs"
-                    tooltip={item.query}
-                  >
-                    {/*
-                     * TODO: wire up to /dashboard?q=<encoded-query>
-                     * when the chat API is implemented
-                     */}
-                    <button
-                      id={`recent-search-${item.id}`}
-                      type="button"
-                      className="w-full text-left flex items-center gap-2"
-                    >
-                      <span className="truncate text-muted-foreground hover:text-foreground transition-colors leading-tight flex-1">
-                        {item.query}
-                      </span>
-                      <Badge
-                        variant="outline"
-                        className="text-[10px] shrink-0 py-0"
-                      >
-                        {item.timestamp}
-                      </Badge>
-                    </button>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
       </SidebarContent>
 
       {/* ── Footer: User ──────────────────────────────────────────────────── */}
       <SidebarFooter className="px-3 py-3">
-        <div className="flex items-center gap-2 group-data-[collapsible=icon]:justify-center">
-          <UserButton
-            appearance={{
-              elements: {
-                avatarBox: "h-8 w-8",
-              },
-            }}
-          />
-          <div className="flex flex-col min-w-0 group-data-[collapsible=icon]:hidden">
-            {/*
-             * TODO: replace with real user name/email from Clerk currentUser()
-             * when server-side data fetching is implemented
-             */}
-            <span className="text-xs font-medium truncate text-foreground">
-              Quality Manager
-            </span>
-            <span className="text-[11px] text-muted-foreground truncate">
-              Sharma Textiles Pvt. Ltd.
-            </span>
-          </div>
-        </div>
+        <UserButton
+          userProfileProps={{ appearance: clerkAppearance }}
+          appearance={{
+            ...clerkAppearance,
+            elements: {
+              avatarBox: "h-8 w-8",
+            },
+          }}
+        />
       </SidebarFooter>
     </Sidebar>
   );

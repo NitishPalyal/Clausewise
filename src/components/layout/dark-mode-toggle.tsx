@@ -49,22 +49,26 @@ export function DarkModeToggle() {
 
   return (
     <Tooltip>
-      <TooltipTrigger>
-        <Button
-          id="dark-mode-toggle"
-          variant="ghost"
-          size="icon"
-          onClick={toggle}
-          aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
-          className="h-9 w-9 text-muted-foreground hover:text-foreground"
-        >
-          {isDark ? (
-            <Sun className="h-4 w-4" aria-hidden="true" />
-          ) : (
-            <Moon className="h-4 w-4" aria-hidden="true" />
-          )}
-        </Button>
-      </TooltipTrigger>
+      <TooltipTrigger
+        render={
+          <Button
+            id="dark-mode-toggle"
+            variant="ghost"
+            size="icon"
+            onClick={toggle}
+            aria-label={
+              isDark ? "Switch to light mode" : "Switch to dark mode"
+            }
+            className="h-9 w-9 text-muted-foreground hover:text-foreground"
+          >
+            {isDark ? (
+              <Sun className="h-4 w-4" aria-hidden="true" />
+            ) : (
+              <Moon className="h-4 w-4" aria-hidden="true" />
+            )}
+          </Button>
+        }
+      />
       <TooltipContent side="bottom">
         {isDark ? "Light mode" : "Dark mode"}
       </TooltipContent>

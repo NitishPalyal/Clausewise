@@ -55,20 +55,22 @@ export function Topbar({ title, subtitle }: TopbarProps) {
       <div className="flex items-center gap-1">
         {/* Help — links to docs placeholder */}
         <Tooltip>
-          <TooltipTrigger>
-            <Button
-              id="help-button"
-              variant="ghost"
-              size="icon"
-              className="h-9 w-9 text-muted-foreground hover:text-foreground"
-              aria-label="Help and documentation"
-              onClick={() => {
-                /* TODO: open help centre / documentation modal */
-              }}
-            >
-              <HelpCircle className="h-4 w-4" aria-hidden="true" />
-            </Button>
-          </TooltipTrigger>
+          <TooltipTrigger
+            render={
+              <Button
+                id="help-button"
+                variant="ghost"
+                size="icon"
+                className="h-9 w-9 text-muted-foreground hover:text-foreground"
+                aria-label="Help and documentation"
+                onClick={() => {
+                  /* TODO: open help centre / documentation modal */
+                }}
+              >
+                <HelpCircle className="h-4 w-4" aria-hidden="true" />
+              </Button>
+            }
+          />
           <TooltipContent side="bottom">Help</TooltipContent>
         </Tooltip>
 

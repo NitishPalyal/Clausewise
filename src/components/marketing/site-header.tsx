@@ -35,6 +35,7 @@ export function SiteHeader() {
         <div className="flex items-center gap-2">
           <Button
             render={<Link href="/sign-in" />}
+            nativeButton={false}
             variant="ghost"
             size="sm"
             className="hidden text-ink/75 sm:inline-flex"
@@ -43,6 +44,7 @@ export function SiteHeader() {
           </Button>
           <Button
             render={<Link href="/sign-up" />}
+            nativeButton={false}
             size="sm"
             className="bg-steel text-white hover:bg-steel/90"
           >

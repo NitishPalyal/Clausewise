@@ -11,8 +11,11 @@ import {
 } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useClerkAppearance } from "@/hooks/use-clerk-appearance";
 
 export function OrgGateScreen() {
+  const clerkAppearance = useClerkAppearance();
+
   return (
     <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-paper p-4">
       <div className="absolute inset-0 grid grid-cols-12 gap-3 p-4 opacity-40">
@@ -23,13 +26,13 @@ export function OrgGateScreen() {
           <Skeleton className="h-20 w-1/2" />
         </div>
       </div>
-      <Card className="relative z-10 w-full max-w-lg rounded-none border-ink/15 bg-white shadow-[10px_10px_0_#d7dddc]">
+      <Card className="relative z-10 w-full max-w-lg rounded-none border-border bg-card shadow-lg">
         <CardHeader>
           <p className="font-mono text-xs text-steel">ONE LAST STEP</p>
-          <CardTitle className="mt-2 text-2xl text-ink">
+          <CardTitle className="mt-2 text-2xl text-foreground">
             Set up your organization
           </CardTitle>
-          <CardDescription className="text-ink/60">
+          <CardDescription className="text-muted-foreground">
             ClauseWise keeps each company&apos;s documents and answers separate.
           </CardDescription>
         </CardHeader>
@@ -48,9 +51,10 @@ export function OrgGateScreen() {
                 hidePersonal
                 afterSelectOrganizationUrl="/dashboard"
                 appearance={{
+                  ...clerkAppearance,
                   elements: {
                     card: "w-full shadow-none border-0",
-                    headerTitle: "text-ink",
+                    headerTitle: "text-foreground",
                     headerSubtitle: "text-muted-foreground",
                   },
                 }}
@@ -60,9 +64,10 @@ export function OrgGateScreen() {
               <CreateOrganization
                 afterCreateOrganizationUrl="/dashboard"
                 appearance={{
+                  ...clerkAppearance,
                   elements: {
                     card: "w-full shadow-none border-0",
-                    headerTitle: "text-ink",
+                    headerTitle: "text-foreground",
                     headerSubtitle: "text-muted-foreground",
                   },
                 }}

@@ -134,7 +134,7 @@ export function AboutSection() {
           ))}
         </div>
       </section>
-      <section id="who-its-for" className="border-y border-ink/10 bg-white/55">
+      <section id="who-its-for" className="border-y border-ink/10 bg-card/50">
         <div className="mx-auto max-w-7xl px-5 py-20 lg:px-8">
           <p className="font-mono text-xs text-steel">WHO IT&apos;S FOR</p>
           <h2 className="mt-4 text-3xl font-semibold tracking-tight text-ink">
@@ -179,7 +179,7 @@ export function AboutSection() {
           ))}
         </div>
       </section>
-      <section className="border-t border-ink/10 bg-white/55">
+      <section className="border-t border-ink/10 bg-card/50">
         <div className="mx-auto max-w-7xl overflow-x-auto px-5 py-20 lg:px-8">
           <p className="font-mono text-xs text-steel">THE DIFFERENCE</p>
           <h2 className="mt-4 text-3xl font-semibold tracking-tight text-ink">

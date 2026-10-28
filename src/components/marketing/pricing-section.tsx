@@ -66,8 +66,8 @@ export function PricingSection() {
             key={plan.name}
             className={
               plan.featured
-                ? "relative border border-steel bg-white p-7 shadow-[8px_8px_0_#c5d0d2] lg:-translate-y-3"
-                : "border border-ink/15 bg-white/55 p-7"
+                ? "relative border border-steel bg-card p-7 shadow-lg lg:-translate-y-3"
+                : "border border-ink/15 bg-card/60 p-7"
             }
           >
             <div className="flex items-center justify-between">
@@ -98,9 +98,10 @@ export function PricingSection() {
                   }
                 />
               }
+              nativeButton={false}
               className={
                 plan.featured
-                  ? "mt-7 w-full bg-steel text-white hover:bg-steel/90"
+                  ? "mt-7 w-full bg-primary text-primary-foreground hover:bg-primary/90"
                   : "mt-7 w-full border-ink/20 text-ink"
               }
               variant={plan.featured ? "default" : "outline"}
