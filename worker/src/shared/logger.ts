@@ -21,7 +21,7 @@ interface LogEntry {
 /**
  * Formats a log entry for console output.
  */
-function formatLogEntry(entry: any): string {
+function formatLogEntry(entry: LogEntry): string {
   const levelUpper = entry.level.toUpperCase().padEnd(5);
   const timestamp = entry.timestamp;
   const context = entry.context ? ` [${entry.context}]` : "";
@@ -50,12 +50,12 @@ export const logger = {
    * Reports potentially problematic situations.
    */
   warn(message: string, context?: string, data?: unknown): void {
-    const entry = {
+    const entry: LogEntry = {
       timestamp: new Date().toISOString(),
-      level: "warn" as const,
+      level: "warn",
       message,
-      context,
-      data,
+      ...(context === undefined ? {} : { context }),
+      ...(data === undefined ? {} : { data }),
     };
 
     const color = getLevelColor("warn");
@@ -68,12 +68,14 @@ export const logger = {
    * Reports failures and exceptions.
    */
   error(message: string, context?: string, error?: unknown): void {
-    const entry = {
+    const entry: LogEntry = {
       timestamp: new Date().toISOString(),
-      level: "error" as const,
+      level: "error",
       message,
-      context,
-      data: error instanceof Error ? error.message : error,
+      ...(context === undefined ? {} : { context }),
+      ...(error === undefined
+        ? {}
+        : { data: error instanceof Error ? error.message : error }),
     };
 
     const color = getLevelColor("error");
