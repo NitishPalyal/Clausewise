@@ -42,7 +42,7 @@ export default function SettingsPage() {
           </div>
         </div>
         <div className="pt-2 flex justify-end">
-          <Button size="sm" className="bg-[var(--brand-navy)] text-white">
+          <Button size="sm" className="bg-primary text-primary-foreground">
             Save Changes
           </Button>
         </div>

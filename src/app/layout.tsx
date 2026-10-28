@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { ClerkProvider } from "@clerk/nextjs";
 import { IBM_Plex_Mono, IBM_Plex_Sans } from "next/font/google";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { clerkAppearance } from "@/lib/clerk-appearance";
 import "./globals.css";
 
 const plexSans = IBM_Plex_Sans({
@@ -55,7 +56,7 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <body className="min-h-full flex flex-col">
-        <ClerkProvider>
+        <ClerkProvider appearance={clerkAppearance}>
           {/* TooltipProvider is required by shadcn/ui Tooltip — uses 'delay' not 'delayDuration' */}
           <TooltipProvider delay={300}>{children}</TooltipProvider>
         </ClerkProvider>

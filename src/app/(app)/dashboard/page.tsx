@@ -1,29 +1,13 @@
 "use client";
 
-/**
- * dashboard/page.tsx
- * The core ClauseWise experience: a chat interface where users
- * ask questions about their compliance documents and get answers
- * with exact citations.
- *
- * States:
- *   1. Empty — no conversation yet; shows <EmptyState /> with example questions
- *   2. Active — messages are in the list; shows scrollable chat + sticky input
- *
- * Data flow (placeholder):
- *   - User types a question and hits Send or Ctrl+Enter
- *   - A "loading" assistant message is optimistically added
- *   - TODO: replace simulateSearch() with a real API call to
- *     POST /api/search when the backend RAG pipeline is ready
- *   - The mock response (from EXAMPLE_CONVERSATION) is shown after delay
- */
-
 import { useState, useRef, useEffect } from "react";
+import { useAuth } from "@clerk/nextjs";
 import { ChatMessageItem } from "@/components/dashboard/chat-message";
 import { ChatInput } from "@/components/dashboard/chat-input";
 import { EmptyState } from "@/components/dashboard/empty-state";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { EXAMPLE_CONVERSATION, type ChatMessage } from "@/lib/mock-data";
+import type { ChatMessage } from "@/types/chat-types";
+import type { APIResponse } from "@/shared/types";
 
 // Simple ID generator — not crypto, just for UI keys
 let _msgCounter = 10;
@@ -32,9 +16,12 @@ function newId() {
 }
 
 export default function DashboardPage() {
+  const { orgId } = useAuth();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [chatId, setChatId] = useState<string | null>(null);
   const [inputValue, setInputValue] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
 
   // Scroll to the latest message whenever messages change
@@ -42,15 +29,15 @@ export default function DashboardPage() {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  const handleSelectQuestion = (question: string) => {
-    setInputValue(question);
-  };
-
   const handleSend = async () => {
     const query = inputValue.trim();
     if (!query || isLoading) return;
+    if (!orgId) {
+      setError("Select an organization before sending a question.");
+      return;
+    }
+    setError(null);
 
-    // Add user message immediately
     const userMsg: ChatMessage = {
       id: newId(),
       role: "user",
@@ -58,7 +45,6 @@ export default function DashboardPage() {
       timestamp: new Date(),
     };
 
-    // Add a loading placeholder for the assistant
     const loadingId = newId();
     const loadingMsg: ChatMessage = {
       id: loadingId,
@@ -72,44 +58,53 @@ export default function DashboardPage() {
     setInputValue("");
     setIsLoading(true);
 
-    /*
-     * ── PLACEHOLDER — replace with real API call ────────────────────────
-     * When the backend is ready:
-     *
-     *   const res = await fetch("/api/search", {
-     *     method: "POST",
-     *     headers: { "Content-Type": "application/json" },
-     *     body: JSON.stringify({ query, orgId: currentOrg.id }),
-     *   });
-     *   const data = await res.json();
-     *   // data: { answer: string; citations: Citation[] }
-     *
-     * Replace the mock below with: answer = data.answer; citations = data.citations;
-     * ─────────────────────────────────────────────────────────────────────
-     */
-    await simulateSearch();
+    try {
+      const formData = new FormData();
+      formData.set("message", query);
+      formData.set("tenantId", orgId);
+      if (chatId) formData.set("existingChatId", chatId);
 
-    // Pick a mock response — cycle through examples based on message count
-    const exampleIndex =
-      (messages.length / 2) % (EXAMPLE_CONVERSATION.length / 2);
-    const mockResponse =
-      EXAMPLE_CONVERSATION[Math.floor(exampleIndex) * 2 + 1] ??
-      EXAMPLE_CONVERSATION[1]!;
+      const response = await fetch("/api/chat/sendMessage", {
+        method: "POST",
+        body: formData,
+      });
+      const result: APIResponse<{
+        chatId: string;
+        response: string;
+        citations: NonNullable<ChatMessage["citations"]>;
+      }> = await response.json();
 
-    // Replace loading placeholder with real (mock) response
-    setMessages((prev) =>
-      prev.map((m) =>
-        m.id === loadingId
-          ? {
-              ...mockResponse,
-              id: loadingId,
-              timestamp: new Date(),
-              isLoading: false,
-            }
-          : m,
-      ),
-    );
-    setIsLoading(false);
+      if (!response.ok || !result.success) {
+        throw new Error(result.message || "Unable to send your question.");
+      }
+
+      setChatId(result.data.chatId);
+      setMessages((previous) =>
+        previous.map((message) =>
+          message.id === loadingId
+            ? {
+                ...message,
+                content: result.data.response,
+                citations: result.data.citations,
+                timestamp: new Date(),
+                isLoading: false,
+              }
+            : message,
+        ),
+      );
+      window.dispatchEvent(new Event("clausewise:chats-updated"));
+    } catch (sendError) {
+      setMessages((previous) =>
+        previous.filter((message) => message.id !== loadingId),
+      );
+      setError(
+        sendError instanceof Error
+          ? sendError.message
+          : "Unable to send your question. Please try again.",
+      );
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const hasMessages = messages.length > 0;
@@ -129,8 +124,14 @@ export default function DashboardPage() {
         </ScrollArea>
       ) : (
         <div className="flex-1 overflow-y-auto">
-          <EmptyState onSelectQuestion={handleSelectQuestion} />
+          <EmptyState />
         </div>
+      )}
+
+      {error && (
+        <p className="px-4 py-2 text-sm text-destructive" role="alert">
+          {error}
+        </p>
       )}
 
       {/* ── Sticky input bar ──────────────────────────────────────────────── */}
@@ -142,10 +143,4 @@ export default function DashboardPage() {
       />
     </div>
   );
-}
-
-/** Simulates network latency for the mock search. Remove when real API is wired. */
-function simulateSearch(): Promise<void> {
-  const delay = 1200 + Math.random() * 800; // 1.2–2s
-  return new Promise((resolve) => setTimeout(resolve, delay));
 }
