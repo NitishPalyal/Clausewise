@@ -1,6 +1,7 @@
 import { verifyToken } from "@clerk/backend";
 import configKeys from "@/config/config.keys";
 import { Server } from "socket.io";
+import { startDocumentQueueEvents } from "./queue/documentProcessing.events";
 
 const PORT = Number(configKeys.SOCKET_PORT);
 const FRONTEND_URL = configKeys.FRONTEND_URL;
@@ -46,6 +47,9 @@ io.use(async (socket, next) => {
   }
 });
 
+// Start listening for BullMQ events once.
+const stopDocumentQueueEvents = startDocumentQueueEvents(io);
+
 io.on("connection", (socket) => {
   console.log(
     `Socket connected for user ${socket.data.userId}; socket ID: ${socket.id}`,
@@ -54,6 +58,20 @@ io.on("connection", (socket) => {
   socket.on("disconnect", (reason) => {
     console.log(`Socket disconnected: ${socket.id}. Reason: ${reason}`);
   });
+});
+
+// Stop the listener when the whole server is shutting down.
+async function shutdown() {
+  await stopDocumentQueueEvents();
+  io.close();
+}
+
+process.once("SIGINT", () => {
+  void shutdown();
+});
+
+process.once("SIGTERM", () => {
+  void shutdown();
 });
 
 console.log(`Socket.IO server listening on port ${PORT}`);
