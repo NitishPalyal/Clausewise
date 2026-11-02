@@ -5,7 +5,7 @@ dotenv.config();
 const configKeys: CONFIG = {
   FRONTEND_URL: process.env.FRONTEND_URL || "",
   SOCKET_PORT: process.env.SOCKET_PORT || "",
-  NEXT_PUBLIC_REALTIME_URL: process.env.NEXT_PUBLIC_REALTIME_URL || "",
+  NEXT_PUBLIC_SOCKET_URL: process.env.NEXT_PUBLIC_SOCKET_URL || "",
   CLERK_SECRET_KEY: process.env.CLERK_SECRET_KEY || "",
   DATABASE_URL: process.env.DATABASE_URL || "",
   NODE_ENV: process.env.NODE_ENV || "",
