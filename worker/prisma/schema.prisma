@@ -65,7 +65,7 @@ enum Status {
   pending
   uploading
   failed
-  uploded
+  uploaded
   delayed
 }
 model DocumentVersion {
