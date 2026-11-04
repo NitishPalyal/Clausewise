@@ -1,58 +1,63 @@
-import { verifyToken } from "@clerk/backend";
 import configKeys from "@/config/config.keys";
+import { prisma } from "@/lib/prisma";
 import { Server } from "socket.io";
+
+import {
+  socketAuthMiddleware,
+  type AuthenticatedSocketData,
+} from "./socket.auth.middleware";
+
 import { startDocumentQueueEvents } from "./queue/documentProcessing.events";
+
+/**
+ * Entry point for the dedicated Socket.IO server.
+ *
+ * Responsibilities:
+ * 1. Create the Socket.IO server.
+ * 2. Authenticate incoming connections.
+ * 3. Join authenticated users to their private rooms.
+ * 4. Start BullMQ document event listeners.
+ * 5. Gracefully close connections during shutdown.
+ */
 
 const PORT = Number(configKeys.SOCKET_PORT);
 const FRONTEND_URL = configKeys.FRONTEND_URL;
 
-const CLERK_SECRET_KEY = configKeys.CLERK_SECRET_KEY;
-
-if (!CLERK_SECRET_KEY) {
-  throw new Error("Missing CLERK_SECRET_KEY in environment variables");
+// Validate required server configuration.
+if (!Number.isInteger(PORT) || PORT <= 0 || PORT > 65535) {
+  throw new Error("Invalid SOCKET_PORT configuration");
 }
 
-export const io = new Server(PORT, {
+if (!FRONTEND_URL) {
+  throw new Error("Missing FRONTEND_URL configuration");
+}
+
+// Create the Socket.IO server without listening yet.
+export const io = new Server({
   cors: {
     origin: FRONTEND_URL,
   },
 });
 
-// Authenticate each incoming connection.
-io.use(async (socket, next) => {
-  const token: unknown = socket.handshake.auth?.token;
+// Register authentication before accepting connections.
+io.use(socketAuthMiddleware);
 
-  if (typeof token !== "string" || token.length === 0) {
-    return next(new Error("Authentication required"));
-  }
-
-  try {
-    const claims = await verifyToken(token, {
-      secretKey: CLERK_SECRET_KEY,
-      authorizedParties: [FRONTEND_URL],
-    });
-
-    const userId = claims.sub;
-
-    if (typeof userId !== "string" || userId.length === 0) {
-      return next(new Error("Invalid session token"));
-    }
-
-    // Save the user ID obtained from the verified token.
-    socket.data.userId = userId;
-
-    next();
-  } catch {
-    next(new Error("Invalid or expired session token"));
-  }
-});
-
-// Start listening for BullMQ events once.
+// Start listening to the existing BullMQ queue.
 const stopDocumentQueueEvents = startDocumentQueueEvents(io);
 
-io.on("connection", (socket) => {
+// Handle successfully authenticated connections.
+io.on("connection", async (socket) => {
+  const { userId, tenantId } = socket.data as AuthenticatedSocketData;
+
+  // Create the room names using server-verified identities.
+  const userRoom = `user:${userId}`;
+  const tenantRoom = `tenant:${tenantId}`;
+
+  // Join both private rooms.
+  await socket.join([userRoom, tenantRoom]);
+
   console.log(
-    `Socket connected for user ${socket.data.userId}; socket ID: ${socket.id}`,
+    `Socket connected: ${socket.id} | User: ${userId} | Tenant: ${tenantId}`,
   );
 
   socket.on("disconnect", (reason) => {
@@ -60,10 +65,32 @@ io.on("connection", (socket) => {
   });
 });
 
-// Stop the listener when the whole server is shutting down.
+// Start accepting connections after all handlers are registered.
+io.listen(PORT);
+
+// Gracefully close resources when the process shuts down.
+let isShuttingDown = false;
+
 async function shutdown() {
-  await stopDocumentQueueEvents();
-  io.close();
+  if (isShuttingDown) return;
+
+  isShuttingDown = true;
+
+  try {
+    await stopDocumentQueueEvents();
+  } catch (error) {
+    console.error("Failed to close BullMQ listeners:", error);
+  }
+
+  try {
+    await prisma.$disconnect();
+  } catch (error) {
+    console.error("Failed to disconnect Prisma:", error);
+  }
+
+  io.close(() => {
+    process.exit(0);
+  });
 }
 
 process.once("SIGINT", () => {
