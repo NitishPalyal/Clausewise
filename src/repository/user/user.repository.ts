@@ -1,4 +1,3 @@
-import { Prisma } from "@/generated/prisma/client";
 import type { Role } from "@/generated/prisma/enums";
 import { prisma } from "@/lib/prisma";
 
