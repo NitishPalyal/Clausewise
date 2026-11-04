@@ -3,6 +3,7 @@
 import { useEffect, useMemo } from "react";
 import { useAuth } from "@clerk/nextjs";
 import { io, type Socket } from "socket.io-client";
+import configKeys from "@/config/config.keys";
 
 export function useRealtimeSocket() {
   const { isLoaded, isSignedIn, getToken } = useAuth();
@@ -10,7 +11,7 @@ export function useRealtimeSocket() {
   const socket = useMemo<Socket | null>(() => {
     if (!isLoaded || !isSignedIn) return null;
 
-    return io(process.env.NEXT_PUBLIC_REALTIME_URL ?? "", {
+    return io(process.env.NEXT_PUBLIC_SOCKET_URL ?? "", {
       autoConnect: false,
       auth: (callback) => {
         void getToken()
