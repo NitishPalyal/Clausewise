@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev --webpack",
     "server": "npx tsx watch socket/socket.server.ts",
     "build": "npm run db:generate && next build",
     "start": "next start",
