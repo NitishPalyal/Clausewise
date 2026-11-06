@@ -2,7 +2,6 @@
 
 import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
-import { Plus, Upload } from "lucide-react";
 import type { DocumentType } from "@/generated/prisma/enums";
 import type { APIResponse } from "@/shared/types";
 import { Button } from "@/components/ui/button";
@@ -25,13 +24,16 @@ export function DocumentUploadDialog({
   tenantId,
   documentId,
   mode,
+  open,
+  onClose,
 }: {
   tenantId: string;
   documentId?: string;
   mode: "new" | "version";
+  open: boolean;
+  onClose: () => void;
 }) {
   const router = useRouter();
-  const [open, setOpen] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const isNewDocument = mode === "new";
@@ -84,7 +86,7 @@ export function DocumentUploadDialog({
       }
 
       form.reset();
-      setOpen(false);
+      onClose();
       router.refresh();
     } catch (error) {
       setErrorMessage(
@@ -102,23 +104,11 @@ export function DocumentUploadDialog({
       open={open}
       onOpenChange={(nextOpen) => {
         if (!isUploading) {
-          setOpen(nextOpen);
           if (nextOpen) setErrorMessage("");
+          else onClose();
         }
       }}
     >
-      <Button
-        type="button"
-        className="gap-2 bg-primary text-primary-foreground hover:bg-primary/90"
-        onClick={() => setOpen(true)}
-      >
-        {isNewDocument ? (
-          <Upload className="size-4" aria-hidden="true" />
-        ) : (
-          <Plus className="size-4" aria-hidden="true" />
-        )}
-        {isNewDocument ? "Upload document" : "Upload new version"}
-      </Button>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>
@@ -180,7 +170,7 @@ export function DocumentUploadDialog({
               type="button"
               variant="outline"
               disabled={isUploading}
-              onClick={() => setOpen(false)}
+              onClick={onClose}
             >
               Cancel
             </Button>

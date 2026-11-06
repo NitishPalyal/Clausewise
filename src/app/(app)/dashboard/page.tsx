@@ -140,6 +140,7 @@ export default function DashboardPage() {
         onChange={setInputValue}
         onSend={handleSend}
         isLoading={isLoading}
+        tenantId={orgId ?? null}
       />
     </div>
   );

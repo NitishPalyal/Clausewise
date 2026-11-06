@@ -2,11 +2,12 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { FileText, Search } from "lucide-react";
+import { FileText, Search, Upload } from "lucide-react";
 import type { DocumentType } from "@/generated/prisma/enums";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { DocumentUploadDialog } from "@/components/documents/document-upload-dialog";
+import { useDocumentUpload } from "@/components/documents/document-upload-provider";
 
 const DOCUMENT_TYPE_LABELS: Record<DocumentType, string> = {
   VENDOR_CERTIFICATE: "Vendor certificate",
@@ -36,6 +37,7 @@ export function DocumentsList({
   tenantId: string;
   documents: DocumentListItem[];
 }) {
+  const openDocumentUpload = useDocumentUpload();
   const [search, setSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState<DocumentType | "ALL">("ALL");
   const filteredDocuments = useMemo(() => {
@@ -65,7 +67,14 @@ export function DocumentsList({
             Find, review, and maintain the documents shared with your tenant.
           </p>
         </div>
-        <DocumentUploadDialog tenantId={tenantId} mode="new" />
+        <Button
+          type="button"
+          className="gap-2 bg-primary text-primary-foreground hover:bg-primary/90"
+          onClick={() => openDocumentUpload({ tenantId })}
+        >
+          <Upload className="size-4" aria-hidden="true" />
+          Upload document
+        </Button>
       </section>
 
       <section className="space-y-4">

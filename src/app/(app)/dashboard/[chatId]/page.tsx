@@ -168,6 +168,7 @@ export default function ChatPage() {
         onChange={setInputValue}
         onSend={handleSend}
         isLoading={isSending}
+        tenantId={orgId ?? null}
       />
     </div>
   );

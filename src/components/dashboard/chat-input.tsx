@@ -8,13 +8,14 @@
  * - Textarea that auto-grows (up to 5 lines) with the message
  * - Ctrl+Enter / Cmd+Enter keyboard shortcut to send
  * - Character limit (500) with counter
- * - Attach file button (placeholder — document upload is out of scope today)
+ * - Document upload dialog
  * - Disabled state while the assistant is loading
  */
 
 import { useRef } from "react";
 import { Send, Paperclip, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useDocumentUpload } from "@/components/documents/document-upload-provider";
 import {
   Tooltip,
   TooltipContent,
@@ -29,6 +30,7 @@ interface ChatInputProps {
   onChange: (value: string) => void;
   onSend: () => void;
   isLoading: boolean;
+  tenantId: string | null;
   placeholder?: string;
 }
 
@@ -37,8 +39,10 @@ export function ChatInput({
   onChange,
   onSend,
   isLoading,
+  tenantId,
   placeholder = "Ask about a clause, vendor certificate, or audit finding…",
 }: ChatInputProps) {
+  const openDocumentUpload = useDocumentUpload();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const charCount = value.length;
   const isOverLimit = charCount > MAX_CHARS;
@@ -70,30 +74,50 @@ export function ChatInput({
             : "border-border focus-within:border-primary/60 focus-within:ring-1 focus-within:ring-primary/20",
         )}
       >
-        {/* Attach file — placeholder */}
-        <Tooltip>
-          <TooltipTrigger
-            render={
-              <Button
-                id="attach-file-button"
-                type="button"
-                variant="ghost"
-                size="icon"
-                disabled={isLoading}
-                className="mb-0.5 h-8 w-8 shrink-0 text-muted-foreground hover:text-foreground"
-                aria-label="Attach a document (coming soon)"
-                onClick={() => {
-                  /* TODO: trigger document upload flow when implemented */
-                }}
-              >
-                <Paperclip className="h-4 w-4" aria-hidden="true" />
-              </Button>
-            }
-          />
-          <TooltipContent side="top" className="text-xs">
-            Attach a document (coming soon)
-          </TooltipContent>
-        </Tooltip>
+        {tenantId ? (
+          <Tooltip>
+            <TooltipTrigger
+              render={
+                <Button
+                  id="attach-file-button"
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  disabled={isLoading}
+                  className="mb-0.5 h-8 w-8 shrink-0 text-muted-foreground hover:text-foreground"
+                  aria-label="Upload a document"
+                  onClick={() => openDocumentUpload({ tenantId })}
+                >
+                  <Paperclip className="h-4 w-4" aria-hidden="true" />
+                </Button>
+              }
+            />
+            <TooltipContent side="top" className="text-xs">
+              Upload a document
+            </TooltipContent>
+          </Tooltip>
+        ) : (
+          <Tooltip>
+            <TooltipTrigger
+              render={
+                <Button
+                  id="attach-file-button"
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  disabled
+                  className="mb-0.5 h-8 w-8 shrink-0 text-muted-foreground hover:text-foreground"
+                  aria-label="Select an organization to upload a document"
+                >
+                  <Paperclip className="h-4 w-4" aria-hidden="true" />
+                </Button>
+              }
+            />
+            <TooltipContent side="top" className="text-xs">
+              Select an organization to upload a document
+            </TooltipContent>
+          </Tooltip>
+        )}
 
         {/* Textarea */}
         <textarea
