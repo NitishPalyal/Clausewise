@@ -3,7 +3,6 @@
 import { useEffect, useMemo } from "react";
 import { useAuth } from "@clerk/nextjs";
 import { io, type Socket } from "socket.io-client";
-import configKeys from "@/config/config.keys";
 
 export function useSocket() {
   const { isLoaded, isSignedIn, getToken } = useAuth();
