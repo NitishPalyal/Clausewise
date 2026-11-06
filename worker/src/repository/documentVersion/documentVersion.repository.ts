@@ -10,7 +10,7 @@ export async function setStatusUploading(id: string) {
 export async function setStatusUploaded(id: string) {
   await prisma.documentVersion.update({
     where: { id },
-    data: { status: Status.uploded },
+    data: { status: Status.uploaded },
   });
 }
 export async function setStatusFailed(id: string) {
