@@ -17,6 +17,7 @@ import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { ChatSidebar } from "@/components/chat/chat-sidebar";
 import { OrgGateScreen } from "@/components/org-gate/org-gate-screen";
 import { Topbar } from "@/components/layout/topbar";
+import { SocketProvider } from "@/lib/socket/socketProvider.ts";
 
 export default async function AppLayout({
   children,
@@ -31,29 +32,31 @@ export default async function AppLayout({
   if (!orgId) return <OrgGateScreen />;
 
   return (
-    <SidebarProvider defaultOpen>
-      <ChatSidebar />
+    <SocketProvider>
+      <SidebarProvider defaultOpen>
+        <ChatSidebar />
 
-      {/* Main content area */}
-      <SidebarInset className="flex flex-col min-h-screen">
-        {/*
-         * Topbar title is static here; individual pages can replace it
-         * via a future slot mechanism or layout-level context if needed.
-         * For now, dashboard overrides the visual title inside its own UI.
-         */}
-        <Topbar
-          title="Ask your documents"
-          subtitle="Answers with the source in view"
-        />
+        {/* Main content area */}
+        <SidebarInset className="flex flex-col min-h-screen">
+          {/*
+           * Topbar title is static here; individual pages can replace it
+           * via a future slot mechanism or layout-level context if needed.
+           * For now, dashboard overrides the visual title inside its own UI.
+           */}
+          <Topbar
+            title="Ask your documents"
+            subtitle="Answers with the source in view"
+          />
 
-        {/* Page content */}
-        <main
-          id="main-content"
-          className="flex-1 flex flex-col overflow-hidden"
-        >
-          {children}
-        </main>
-      </SidebarInset>
-    </SidebarProvider>
+          {/* Page content */}
+          <main
+            id="main-content"
+            className="flex-1 flex flex-col overflow-hidden"
+          >
+            {children}
+          </main>
+        </SidebarInset>
+      </SidebarProvider>
+    </SocketProvider>
   );
 }
