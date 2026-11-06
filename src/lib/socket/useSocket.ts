@@ -5,7 +5,7 @@ import { useAuth } from "@clerk/nextjs";
 import { io, type Socket } from "socket.io-client";
 import configKeys from "@/config/config.keys";
 
-export function useRealtimeSocket() {
+export function useSocket() {
   const { isLoaded, isSignedIn, getToken } = useAuth();
 
   const socket = useMemo<Socket | null>(() => {
