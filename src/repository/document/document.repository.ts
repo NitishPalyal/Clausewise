@@ -1,9 +1,6 @@
 import { prisma } from "@/lib/prisma";
 
-export async function findDocumentForTenant(
-  id: string,
-  tenantId: string,
-) {
+export async function findDocumentForTenant(id: string, tenantId: string) {
   return prisma.document.findFirst({
     where: { id, tenantId },
     select: { id: true },
@@ -49,6 +46,7 @@ export async function findDocumentDetailsForTenant(
           versionNumber: true,
           uploadedAt: true,
           isCurrent: true,
+          status: true,
         },
       },
     },
