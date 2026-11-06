@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useAuth } from "@clerk/nextjs";
-import { useRealtimeSocket } from "@/lib/socket/useSocket.ts";
+import { useSocket } from "@/lib/socket/useSocket.ts";
 
 type ConnectionStatus =
   | "checking-session"
@@ -14,7 +14,7 @@ type ConnectionStatus =
 
 export default function RealtimeTestPage() {
   const { isLoaded, isSignedIn } = useAuth();
-  const socket = useRealtimeSocket();
+  const socket = useSocket();
 
   const [socketStatus, setSocketStatus] =
     useState<ConnectionStatus>("connecting");
