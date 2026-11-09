@@ -61,6 +61,7 @@ export async function deleteDocumentForTenant(id: string, tenantId: string) {
         id: true,
         versions: {
           select: {
+            id: true,
             fileUrl: true,
           },
         },
@@ -69,6 +70,16 @@ export async function deleteDocumentForTenant(id: string, tenantId: string) {
 
     if (!document) {
       return null;
+    }
+
+    const versionIds = document.versions.map((version) => version.id);
+    if (versionIds.length > 0) {
+      await transaction.chunk.deleteMany({
+        where: { documentVersionId: { in: versionIds } },
+      });
+      await transaction.documentVersion.deleteMany({
+        where: { id: { in: versionIds } },
+      });
     }
 
     await transaction.document.delete({ where: { id: document.id } });
