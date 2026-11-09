@@ -33,9 +33,11 @@ function formatDate(date: string | null) {
 export function DocumentsList({
   tenantId,
   documents,
+  storageCleanupWarning,
 }: {
   tenantId: string;
   documents: DocumentListItem[];
+  storageCleanupWarning: boolean;
 }) {
   const openDocumentUpload = useDocumentUpload();
   const [search, setSearch] = useState("");
@@ -76,6 +78,16 @@ export function DocumentsList({
           Upload document
         </Button>
       </section>
+
+      {storageCleanupWarning && (
+        <p
+          role="alert"
+          className="rounded-lg border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-foreground"
+        >
+          The document was deleted, but one or more stored files could not be
+          removed. Check the server logs or contact your administrator.
+        </p>
+      )}
 
       <section className="space-y-4">
         <div className="flex flex-col gap-3 sm:flex-row">

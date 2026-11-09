@@ -5,7 +5,7 @@ const documentTypeSchema = z.enum([
   "COMPLIANCE_CHECKLIST",
 ]);
 
-const documentFileSchema = z.file().max(10 * 1024 * 1024);
+const documentFileSchema = z.file().max(50 * 1024 * 1024);
 
 export const createDocumentUploadSchema = z.object({
   tenantId: z.string().min(1),

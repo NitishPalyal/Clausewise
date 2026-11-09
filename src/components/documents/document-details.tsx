@@ -3,13 +3,20 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, FileText, Plus, Trash2 } from "lucide-react";
+import { AlertTriangle, ArrowLeft, FileText, Plus, Trash2 } from "lucide-react";
 
 import type { DocumentType } from "@/generated/prisma/enums";
-import type { APIResponse } from "@/shared/types";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { useDocumentUpload } from "@/components/documents/document-upload-provider";
 import { useSocket } from "@/lib/socket/useSocket.ts";
 
@@ -69,14 +76,16 @@ export function DocumentDetails({
   const socket = useSocket();
   const openDocumentUpload = useDocumentUpload();
 
-  const [versions, setVersions] = useState(document.versions);
+  const [versionStatuses, setVersionStatuses] = useState<
+    Partial<Record<string, DocumentVersionStatus>>
+  >({});
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
-
-  // Synchronize versions when the server sends updated document data.
-  useEffect(() => {
-    setVersions(document.versions);
-  }, [document.versions]);
+  const versions = document.versions.map((version) => ({
+    ...version,
+    status: versionStatuses[version.id] ?? version.status,
+  }));
 
   // Listen for document-processing events from the Socket.IO server.
   useEffect(() => {
@@ -88,13 +97,10 @@ export function DocumentDetails({
     ) {
       if (typeof payload?.documentVersionId !== "string") return;
 
-      setVersions((currentVersions) =>
-        currentVersions.map((version) =>
-          version.id === payload.documentVersionId
-            ? { ...version, status }
-            : version,
-        ),
-      );
+      setVersionStatuses((currentStatuses) => ({
+        ...currentStatuses,
+        [payload.documentVersionId]: status,
+      }));
     }
 
     const handleProcessing = (payload: DocumentJobEvent) => {
@@ -122,35 +128,61 @@ export function DocumentDetails({
   }, [socket]);
 
   async function handleDelete() {
-    if (
-      !window.confirm(
-        `Delete "${document.title}" and all of its versions? This cannot be undone.`,
-      )
-    ) {
-      return;
-    }
-
     setErrorMessage("");
     setIsDeleting(true);
-
-    const formData = new FormData();
-    formData.set("tenantId", tenantId);
-    formData.set("documentId", document.id);
 
     try {
       const response = await fetch("/api/documents/delete", {
         method: "DELETE",
-        body: formData,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ tenantId, documentId: document.id }),
       });
 
-      const result: APIResponse = await response.json();
+      const result: unknown = await response.json().catch(() => null);
+      const resultMessage =
+        typeof result === "object" &&
+        result !== null &&
+        "message" in result &&
+        typeof result.message === "string"
+          ? result.message
+          : null;
+      const resultDetails =
+        typeof result === "object" &&
+        result !== null &&
+        "error" in result &&
+        typeof result.error === "object" &&
+        result.error !== null &&
+        "details" in result.error &&
+        typeof result.error.details === "string"
+          ? result.error.details
+          : null;
+      const succeeded =
+        typeof result === "object" &&
+        result !== null &&
+        "success" in result &&
+        result.success === true;
+      const warning =
+        typeof result === "object" &&
+        result !== null &&
+        "warning" in result &&
+        typeof result.warning === "string"
+          ? result.warning
+          : null;
 
-      if (!response.ok || !result.success) {
-        router.refresh();
-        throw new Error(result.message || "The document could not be deleted.");
+      if (!response.ok || !succeeded) {
+        throw new Error(
+          resultDetails ||
+            resultMessage ||
+            `The document could not be deleted (HTTP ${response.status}).`,
+        );
       }
 
-      router.push("/documents");
+      setIsDeleteDialogOpen(false);
+      router.replace(
+        warning
+          ? "/documents?notice=storage-cleanup-failed"
+          : "/documents",
+      );
       router.refresh();
     } catch (error) {
       setErrorMessage(
@@ -227,10 +259,13 @@ export function DocumentDetails({
                 variant="destructive"
                 className="gap-2"
                 disabled={isDeleting}
-                onClick={handleDelete}
+                onClick={() => {
+                  setErrorMessage("");
+                  setIsDeleteDialogOpen(true);
+                }}
               >
                 <Trash2 className="size-4" aria-hidden="true" />
-                {isDeleting ? "Deleting..." : "Delete document"}
+                Delete document
               </Button>
             )}
           </div>
@@ -303,6 +338,60 @@ export function DocumentDetails({
           </p>
         )}
       </section>
+
+      <Dialog
+        open={isDeleteDialogOpen}
+        onOpenChange={(open) => {
+          if (!isDeleting) {
+            setIsDeleteDialogOpen(open);
+            if (!open) setErrorMessage("");
+          }
+        }}
+      >
+        <DialogContent
+          showCloseButton={!isDeleting}
+          aria-describedby="delete-document-description"
+        >
+          <DialogHeader>
+            <span className="flex size-11 items-center justify-center rounded-full bg-destructive/10 text-destructive">
+              <AlertTriangle className="size-5" aria-hidden="true" />
+            </span>
+            <DialogTitle>Delete this document?</DialogTitle>
+            <DialogDescription id="delete-document-description">
+              <span className="font-medium text-foreground">
+                {document.title}
+              </span>{" "}
+              and all {versions.length === 1 ? "its version" : "its versions"}{" "}
+              will be permanently deleted. This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          {errorMessage && (
+            <p role="alert" className="text-sm text-destructive">
+              {errorMessage}
+            </p>
+          )}
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              disabled={isDeleting}
+              onClick={() => setIsDeleteDialogOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              variant="destructive"
+              disabled={isDeleting}
+              onClick={handleDelete}
+              className="gap-2"
+            >
+              <Trash2 className="size-4" aria-hidden="true" />
+              {isDeleting ? "Deleting document..." : "Delete permanently"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
