@@ -20,6 +20,8 @@ const DOCUMENT_TYPES: { value: DocumentType; label: string }[] = [
   { value: "COMPLIANCE_CHECKLIST", label: "Compliance checklist" },
 ];
 
+const MAX_FILE_SIZE_BYTES = 50 * 1024 * 1024;
+
 export function DocumentUploadDialog({
   tenantId,
   documentId,
@@ -56,8 +58,8 @@ export function DocumentUploadDialog({
       setErrorMessage("Enter a name for this document.");
       return;
     }
-    if (file.size > 10 * 1024 * 1024) {
-      setErrorMessage("The selected file must be 10 MB or smaller.");
+    if (file.size > MAX_FILE_SIZE_BYTES) {
+      setErrorMessage("The selected file must be 50 MB or smaller.");
       return;
     }
 
@@ -115,7 +117,7 @@ export function DocumentUploadDialog({
             {isNewDocument ? "Upload a document" : "Upload a new version"}
           </DialogTitle>
           <DialogDescription>
-            Upload a PDF or DOCX file up to 10 MB. ClauseWise will process it
+            Upload a PDF or DOCX file up to 50 MB. ClauseWise will process it
             after upload.
           </DialogDescription>
         </DialogHeader>
@@ -157,7 +159,7 @@ export function DocumentUploadDialog({
               required
             />
             <span className="block text-xs font-normal text-muted-foreground">
-              PDF or DOCX, maximum 10 MB.
+              PDF or DOCX, maximum 50 MB.
             </span>
           </label>
           {errorMessage && (
