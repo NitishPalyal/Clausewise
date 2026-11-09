@@ -9,16 +9,24 @@ export const metadata: Metadata = {
   description: "Manage and upload your manufacturing compliance documents, SOPs, and certificates.",
 };
 
-export default async function DocumentsPage() {
+export default async function DocumentsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ notice?: string | string[] }>;
+}) {
   const { orgId } = await requireAuthPage();
   if (!orgId) redirect("/dashboard");
 
-  const documents = await DocumentRepo.findDocumentsForTenant(orgId);
+  const [{ notice }, documents] = await Promise.all([
+    searchParams,
+    DocumentRepo.findDocumentsForTenant(orgId),
+  ]);
 
   return (
     <div className="min-h-0 flex-1 overflow-y-auto">
       <DocumentsList
         tenantId={orgId}
+        storageCleanupWarning={notice === "storage-cleanup-failed"}
         documents={documents.map((document) => ({
           ...document,
           uploadedAt: document.versions[0]?.uploadedAt.toISOString() ?? null,
