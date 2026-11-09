@@ -11,6 +11,7 @@ export interface APIResponse<T = null> {
   success: boolean;
   message: string;
   data: T;
+  warning?: string;
   error?: {
     code: string;
     details?: string;
