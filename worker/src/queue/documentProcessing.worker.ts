@@ -1,4 +1,4 @@
-import { Job, Worker } from "bullmq";
+import { Worker } from "bullmq";
 import { connection } from "./documentProcessing.connection.ts";
 import { ingestionPipline } from "../ingestionPipeline/ingestionPipeline.ts";
 import { documentProcessingJobDataSchema } from "./documentProcessing.schema.ts";
