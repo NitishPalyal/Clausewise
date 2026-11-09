@@ -46,15 +46,20 @@ export async function embedBatchWithRetry(
 }
 
 async function callGemini(texts: string[]): Promise<number[][]> {
-  const result = await ai.models.embedContent({
-    model: MODEL,
-    contents: texts,
-    config: {
-      taskType: "RETRIEVAL_DOCUMENT",
-      outputDimensionality: DIMENSIONS,
-    },
-  });
-  return (result.embeddings ?? []).map((e) => normalize(e.values ?? []));
+  try {
+    const result = await ai.models.embedContent({
+      model: MODEL,
+      contents: texts,
+      config: {
+        taskType: "RETRIEVAL_DOCUMENT",
+        outputDimensionality: DIMENSIONS,
+      },
+    });
+    return (result.embeddings ?? []).map((e) => normalize(e.values ?? []));
+  } catch (error) {
+    console.log(error);
+    throw error;
+  }
 }
 
 export async function embedChunks(
