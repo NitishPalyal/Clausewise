@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { FileText, Search, Upload } from "lucide-react";
 import type { DocumentType } from "@/generated/prisma/enums";
@@ -42,6 +42,11 @@ export function DocumentsList({
   const openDocumentUpload = useDocumentUpload();
   const [search, setSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState<DocumentType | "ALL">("ALL");
+  const [showStorageCleanupWarning, setShowStorageCleanupWarning] = useState(
+    storageCleanupWarning,
+  );
+  const [isStorageCleanupWarningVisible, setIsStorageCleanupWarningVisible] =
+    useState(storageCleanupWarning);
   const filteredDocuments = useMemo(() => {
     const normalizedSearch = search.trim().toLocaleLowerCase();
     return documents.filter((document) => {
@@ -54,6 +59,25 @@ export function DocumentsList({
       );
     });
   }, [documents, search, typeFilter]);
+
+  useEffect(() => {
+    if (!showStorageCleanupWarning) return;
+
+    window.history.replaceState(window.history.state, "", "/documents");
+    const fadeTimeout = window.setTimeout(
+      () => setIsStorageCleanupWarningVisible(false),
+      6000,
+    );
+    const removeTimeout = window.setTimeout(
+      () => setShowStorageCleanupWarning(false),
+      6500,
+    );
+
+    return () => {
+      window.clearTimeout(fadeTimeout);
+      window.clearTimeout(removeTimeout);
+    };
+  }, [showStorageCleanupWarning]);
 
   return (
     <div className="mx-auto w-full max-w-6xl space-y-6 p-4 sm:p-6">
@@ -79,10 +103,12 @@ export function DocumentsList({
         </Button>
       </section>
 
-      {storageCleanupWarning && (
+      {showStorageCleanupWarning && (
         <p
           role="alert"
-          className="rounded-lg border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-foreground"
+          className={`rounded-lg border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-foreground transition-opacity duration-500 ${
+            isStorageCleanupWarningVisible ? "opacity-100" : "opacity-0"
+          }`}
         >
           The document was deleted, but one or more stored files could not be
           removed. Check the server logs or contact your administrator.
