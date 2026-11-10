@@ -4,6 +4,7 @@ import configKeys from "@/config/config.keys";
 
 const globalForPrisma = globalThis as unknown as { prisma: PrismaClient };
 
+// Reuse the client during development reloads to avoid opening extra connections.
 export const prisma =
   globalForPrisma.prisma ??
   new PrismaClient({

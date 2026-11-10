@@ -7,6 +7,7 @@ import * as UserRepo from "@/repository/user/user.repository.ts";
 import { documentDeleteSchema } from "@/schema/documentApi.schema.ts";
 import type { APIResponse } from "@/shared/types.ts";
 
+/** Deletes the tenant's document records, then best-effort removes stored files. */
 export async function DELETE(request: NextRequest) {
   try {
     const { userId } = await auth();

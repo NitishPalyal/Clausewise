@@ -7,6 +7,7 @@ const FILE_TYPE_EXTENSIONS: Record<FileType, string> = {
   docx: ".docx",
 };
 
+/** Builds a tenant-scoped object key with a unique directory for each upload. */
 export function generateFileKey({
   fileType,
   folderName,

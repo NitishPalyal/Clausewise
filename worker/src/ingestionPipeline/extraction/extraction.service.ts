@@ -19,6 +19,7 @@ function bufferToBlob(fileBuffer: Buffer): Blob {
   });
 }
 
+/** Renders PDF pages and uses OCR when the file has no usable embedded text. */
 async function processWithOCR(fileBuffer: Buffer): Promise<Document[]> {
   const outputDocuments: Document[] = [];
 
@@ -28,7 +29,6 @@ async function processWithOCR(fileBuffer: Buffer): Promise<Document[]> {
     fs.mkdirSync(tempDir);
   }
 
-  // Save the Buffer temporarily as a PDF
   const tempPdfPath = path.join(tempDir, "input.pdf");
   fs.writeFileSync(tempPdfPath, fileBuffer);
 
@@ -81,12 +81,11 @@ async function processWithOCR(fileBuffer: Buffer): Promise<Document[]> {
   } finally {
     await worker.terminate();
 
-    // Delete temporary PDF
+    // Remove temporary files even if rendering or OCR stops early.
     if (fs.existsSync(tempPdfPath)) {
       fs.unlinkSync(tempPdfPath);
     }
 
-    // Delete temp directory if empty
     if (fs.existsSync(tempDir) && fs.readdirSync(tempDir).length === 0) {
       fs.rmdirSync(tempDir);
     }
@@ -95,6 +94,7 @@ async function processWithOCR(fileBuffer: Buffer): Promise<Document[]> {
   return outputDocuments;
 }
 
+/** Reads embedded PDF text first and falls back to OCR for scanned documents. */
 async function loadPDFFile(fileBuffer: Buffer): Promise<Document[]> {
   const pdfBlob = bufferToBlob(fileBuffer);
   const loader = new PDFLoader(pdfBlob, {
@@ -126,16 +126,6 @@ async function loadPDFFile(fileBuffer: Buffer): Promise<Document[]> {
   return docs;
 }
 
-// async function loadDocxFile(fileBuffer: Buffer): Promise<Document[]> {
-//   const docxBlob = bufferToBlob(fileBuffer, "docx");
-
-//   const loader = new DocxLoader(docxBlob);
-
-//   const docs: Document[] = await loader.load();
-
-//   return docs;
-// }
-
 function tableToText(table: HTMLElement): string {
   return table
     .querySelectorAll("tr")
@@ -148,6 +138,7 @@ function tableToText(table: HTMLElement): string {
     .join("\n");
 }
 
+/** Preserves DOCX headings and tabular content in the text sent to indexing. */
 function htmlToMarkdownText(html: string): string {
   const root = parse(html);
   const lines: string[] = [];
@@ -166,6 +157,7 @@ function htmlToMarkdownText(html: string): string {
   return lines.join("\n\n");
 }
 
+/** Converts DOCX content to text while marking heading levels for section detection. */
 async function loadDocxFile(fileBuffer: Buffer): Promise<Document[]> {
   const { value: html } = await mammoth.convertToHtml({ buffer: fileBuffer });
   const text = htmlToMarkdownText(html);
@@ -177,13 +169,13 @@ async function loadDocxFile(fileBuffer: Buffer): Promise<Document[]> {
   ];
 }
 
+/** Extracts text from a supported file, using OCR when a PDF needs it. */
 export async function extractText(fileBuffer: Buffer, fileType: FileType) {
   if (fileType === "docx") {
     const pages = await loadDocxFile(fileBuffer);
-    return pages; // always has real text
+    return pages;
   }
 
   const pages = await loadPDFFile(fileBuffer);
-
-  return pages; // born-digital, use as-is
+  return pages;
 }

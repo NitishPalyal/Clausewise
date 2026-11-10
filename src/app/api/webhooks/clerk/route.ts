@@ -1,8 +1,8 @@
-// app/api/webhooks/clerk/route.ts
 import { verifyWebhook } from "@clerk/nextjs/webhooks";
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 
+/** Syncs verified organization and membership events to the local database. */
 export async function POST(req: NextRequest) {
   let event;
   try {
@@ -16,14 +16,14 @@ export async function POST(req: NextRequest) {
       where: { id: event.data.id },
       update: {},
       create: {
-        id: event.data.id, // Clerk's own org id — reused as your Tenant id
+        id: event.data.id, // Clerk organization IDs are used as local tenant IDs.
         name: event.data.name,
       },
     });
   }
 
   if (event.type === "organizationMembership.created") {
-    const clerkRole = event.data.role; // "org:admin" or "org:member"
+    const clerkRole = event.data.role;
 
     await prisma.user.upsert({
       where: { clerkUserId: event.data.public_user_data.user_id },

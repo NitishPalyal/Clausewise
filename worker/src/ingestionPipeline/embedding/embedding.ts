@@ -1,4 +1,3 @@
-// worker/src/rag/embedding/embedding.service.ts
 import ai from "../../lib/ai.ts";
 import type { Chunk } from "../chunking/chunking.types.ts";
 import type { EmbeddedChunk } from "./embedding.types.ts";
@@ -8,6 +7,7 @@ const DIMENSIONS = 768;
 const BATCH_SIZE = 20;
 const MAX_RETRIES = 3;
 
+/** Normalizes vectors so cosine-distance searches compare direction consistently. */
 export function normalize(vector: number[]): number[] {
   const magnitude = Math.sqrt(
     vector.reduce((sum, value) => sum + value * value, 0),
@@ -28,6 +28,7 @@ export function batchOf<T>(items: T[], size: number): T[][] {
   return batches;
 }
 
+/** Retries a failed embedding request with a short, increasing delay. */
 export async function embedBatchWithRetry(
   texts: string[],
   embedFn: (texts: string[]) => Promise<number[][]> = callGemini,
@@ -62,6 +63,7 @@ async function callGemini(texts: string[]): Promise<number[][]> {
   }
 }
 
+/** Embeds chunks in batches to stay within the model request limit. */
 export async function embedChunks(
   chunks: Chunk[],
   embedFn: (texts: string[]) => Promise<number[][]> = callGemini,

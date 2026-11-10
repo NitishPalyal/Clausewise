@@ -13,6 +13,7 @@ import {
 import { FolderName } from "../../../../../worker/src/backblaze/backblaze.types.ts";
 import { errorResponse } from "@/lib/helper/errorResponse.helper.ts";
 
+/** Removes a storage upload if saving its document metadata fails. */
 async function cleanUpUploadedFile(uploadedFileKey: string) {
   try {
     await deleteFromStorageService(uploadedFileKey);
@@ -21,6 +22,7 @@ async function cleanUpUploadedFile(uploadedFileKey: string) {
   }
 }
 
+/** Stores a new document and queues it for text extraction and indexing. */
 export async function POST(request: NextRequest) {
   const { userId } = await auth();
   if (!userId) {

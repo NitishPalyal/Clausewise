@@ -1,4 +1,3 @@
-// src/retrievalPipeline/citations/citations.ts
 import type { RankedChunk } from "../rerank/rerank.types.ts";
 import type { Citation } from "./citations.types.ts";
 
@@ -7,6 +6,7 @@ interface RawCitation {
   chunkIndex: number;
 }
 
+/** Replaces model-provided chunk indices with citation details from ranked results. */
 export function parseCitations(
   rawCitations: RawCitation[],
   rankedChunks: RankedChunk[],
@@ -14,7 +14,7 @@ export function parseCitations(
   const citations: Citation[] = [];
   for (const raw of rawCitations) {
     const chunk = rankedChunks[raw.chunkIndex];
-    if (!chunk) continue; // the AI pointed at an index that doesn't exist — skip it, never crash
+    if (!chunk) continue;
     citations.push({
       marker: raw.marker,
       sectionPath: chunk.sectionPath,

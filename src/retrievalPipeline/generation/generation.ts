@@ -1,4 +1,3 @@
-// src/retrievalPipeline/generation/generation.ts
 import type { Content } from "@google/genai";
 import { gemini } from "@/lib/ai.config.ts";
 import { GENERATION_MODEL } from "@/shared/variable.ts";
@@ -24,6 +23,7 @@ export function toGeminiContents(
   history: ChatTurn[],
   latestPrompt: string,
 ): Content[] {
+  // Gemini uses "model" for assistant turns; the database stores them as "ai".
   const historyContents: Content[] = history.map((turn) => ({
     role: turn.role === "ai" ? "model" : "user",
     parts: [{ text: turn.content }],
@@ -34,6 +34,7 @@ export function toGeminiContents(
   ];
 }
 
+/** Builds an answer from current retrieved passages and the earlier conversation context. */
 export async function generateResponse(
   question: string,
   chunks: RankedChunk[],

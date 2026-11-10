@@ -1,8 +1,8 @@
-// worker/src/repository/chunk/chunk.repository.ts
 import { randomUUID } from "node:crypto";
 import type { EmbeddedChunk } from "../../ingestionPipeline/embedding/embedding.types.ts";
 import { prisma } from "../../lib/prisma.ts";
 
+/** Saves a batch in one transaction so a failed insert does not leave partial results. */
 export async function storeChunks(
   embedded: EmbeddedChunk[],
   documentVersionId: string,

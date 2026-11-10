@@ -14,6 +14,7 @@ import {
 } from "../../../../../worker/src/backblaze/backblaze.service.ts";
 import { FolderName } from "../../../../../worker/src/backblaze/backblaze.types.ts";
 
+/** Removes a storage upload if saving its version metadata fails. */
 async function cleanUpUploadedFile(uploadedFileKey: string) {
   try {
     await deleteFromStorageService(uploadedFileKey);
@@ -22,6 +23,7 @@ async function cleanUpUploadedFile(uploadedFileKey: string) {
   }
 }
 
+/** Stores a new document version and queues it for processing. */
 export async function POST(request: NextRequest) {
   const { userId } = await auth();
   if (!userId) {

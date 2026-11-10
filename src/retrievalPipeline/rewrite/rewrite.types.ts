@@ -1,4 +1,3 @@
-// src/retrievalPipeline/rewrite/rewrite.schema.ts
 import { Type, type Schema } from "@google/genai";
 
 export const rewriteResponseSchema: Schema = {

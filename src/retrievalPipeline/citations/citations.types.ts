@@ -1,4 +1,3 @@
-// src/retrievalPipeline/citations/citations.types.ts
 export interface Citation {
   marker: number;
   sectionPath: string;

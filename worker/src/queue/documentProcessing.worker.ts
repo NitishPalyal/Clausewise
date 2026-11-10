@@ -10,6 +10,7 @@ import {
 
 export const QUEUE_NAME = "document-processing";
 
+/** Runs ingestion jobs and updates each version as its processing state changes. */
 export const documentWorker = new Worker(
   QUEUE_NAME,
   async (job) => {
@@ -23,7 +24,7 @@ export const documentWorker = new Worker(
   },
   {
     connection,
-    concurrency: 5, // how many documents this worker handles at once
+    concurrency: 5,
     limiter: { max: 5, duration: 1000 },
   },
 );
@@ -31,13 +32,11 @@ export const documentWorker = new Worker(
 documentWorker.on("active", async (job) => {
   const jobPayload = documentProcessingJobDataSchema.parse(job.data);
   await setStatusUploadingService(jobPayload.documentVersionId);
-  // console.log(`Job ${job.id} completed`);
 });
 
 documentWorker.on("completed", async (job) => {
   const jobPayload = documentProcessingJobDataSchema.parse(job.data);
   await setStatusUploadedService(jobPayload.documentVersionId);
-  // console.log(`Job ${job.id} completed`);
 });
 
 documentWorker.on("failed", async (job, err) => {
@@ -45,6 +44,4 @@ documentWorker.on("failed", async (job, err) => {
     const jobPayload = documentProcessingJobDataSchema.parse(job.data);
     await setStatusFailedService(jobPayload.documentVersionId);
   }
-
-  // console.error(`Job ${job?.id} failed:`, err);
 });

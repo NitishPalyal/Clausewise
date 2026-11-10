@@ -10,5 +10,5 @@ export interface RetrievedChunk {
   documentId: string;
   documentTitle: string;
   versionNumber: number;
-  distance: number; // cosine distance: 0 = same direction, bigger = less similar
+  distance: number; // Cosine distance from the query; lower values are more similar.
 }

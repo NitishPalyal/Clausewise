@@ -53,6 +53,7 @@ export async function findDocumentDetailsForTenant(
   });
 }
 
+/** Removes database records atomically and returns file keys for storage cleanup. */
 export async function deleteDocumentForTenant(id: string, tenantId: string) {
   return prisma.$transaction(async (transaction) => {
     const document = await transaction.document.findFirst({

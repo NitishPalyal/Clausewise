@@ -1,4 +1,3 @@
-// src/retrievalPipeline/generation/generation.schema.ts
 import { Type, type Schema } from "@google/genai";
 
 export const generationResponseSchema: Schema = {

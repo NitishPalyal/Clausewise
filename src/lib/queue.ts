@@ -1,4 +1,3 @@
-// lib/queue.ts
 import { Queue } from "bullmq";
 import configKeys from "@/config/config.keys";
 import { connection } from "@/shared/connection";
@@ -6,6 +5,7 @@ import type { DocumentProcessingJobData } from "@/shared/types";
 
 const globalForQueue = globalThis as unknown as { documentQueue: Queue };
 
+// Reuse the queue instance during development reloads.
 export const documentQueue =
   globalForQueue.documentQueue ??
   new Queue("document-processing", { connection: connection });

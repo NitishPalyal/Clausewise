@@ -1,12 +1,12 @@
-// worker/src/rag/chunking/chunking.ts
 import { getEncoding } from "js-tiktoken";
 import type { Section } from "../detect-structure/detect-structure.types.ts";
 import type { Chunk } from "./chunking.types.ts";
 
 const CHUNK_SIZE = 600;
 const OVERLAP = 100;
-const encoder = getEncoding("cl100k_base"); // one encoder, reused for the whole run
+const encoder = getEncoding("cl100k_base");
 
+/** Copies section metadata onto a chunk so search results retain their source. */
 function toChunk(section: Section, text: string, chunkIndex: number): Chunk {
   return {
     sectionPath: section.headingPath.join(" > "),
@@ -18,6 +18,7 @@ function toChunk(section: Section, text: string, chunkIndex: number): Chunk {
   };
 }
 
+/** Splits long sections by token count, overlapping adjacent chunks for context. */
 export function chunkBySection(sections: Section[]): Chunk[] {
   const chunks: Chunk[] = [];
 

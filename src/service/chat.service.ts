@@ -1,4 +1,3 @@
-// src/retrievalPipeline/generation/generateChatName.ts
 import { gemini } from "@/lib/ai.config.ts";
 import { GENERATION_MODEL } from "@/shared/variable.ts";
 

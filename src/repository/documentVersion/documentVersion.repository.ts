@@ -30,6 +30,7 @@ export async function createWithFirstVersion({
   return { documentId: version.documentId, documentVersionId: version.id };
 }
 
+/** Adds the next version and changes the current-version flag in one transaction. */
 export async function createNextVersion({
   documentId,
   tenantId,
@@ -73,6 +74,7 @@ export async function createNextVersion({
     return { documentId: version.documentId, documentVersionId: version.id };
   });
 }
+// Deletes a version and makes the newest remaining version current.
 
 export async function deleteVersionForTenant(
   documentVersionId: string,

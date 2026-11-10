@@ -1,6 +1,5 @@
-// src/retrievalPipeline/generation/generation.types.ts
 export interface ChatTurn {
-  role: "user" | "ai"; // matches MessageRole exactly as stored
+  role: "user" | "ai"; // Stored assistant turns use the "ai" role.
   content: string;
 }
 

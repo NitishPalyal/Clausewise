@@ -1,42 +1,42 @@
 export type DetectionMethod =
-  | "markdown-headings" // DOCX: real Word heading styles
-  | "numbered-headings" // lines like "3.1 Material Inspection"
-  | "page-fallback" // no headings found → one section per PDF page
-  | "document-fallback"; // no headings, no pages (DOCX) → whole file is one section
+  | "markdown-headings" // Heading levels preserved from DOCX styles.
+  | "numbered-headings" // A valid numbered outline was detected.
+  | "page-fallback" // PDF pages are used when headings are unavailable.
+  | "document-fallback"; // The full document is one section.
 
 export interface Section {
-  sectionNumber: string | null; // "3.1" exactly as printed; null if the heading has no number
-  title: string; // "Material Inspection"
-  headingPath: string[]; // breadcrumb: ["3 Procedure", "3.1 Material Inspection"]
-  depth: number; // 1 = top level, 2 = sub-section
-  content: string; // text under the heading
-  pageStart: number | null; // null for DOCX — no page concept
+  sectionNumber: string | null; // Original number from the heading, if present.
+  title: string;
+  headingPath: string[]; // Parent-to-child heading labels.
+  depth: number; // Heading level, starting at 1.
+  content: string;
+  pageStart: number | null; // DOCX content has no page numbers.
   pageEnd: number | null;
-  startOffset: number; // position in the joined text (for debugging/highlighting)
+  startOffset: number; // Character offset in the joined document text.
   endOffset: number;
   detectionMethod: DetectionMethod;
 }
 
 export interface Heading {
-  lineStart: number; // where the heading line begins in the joined text
-  lineEnd: number; // where it ends (just before the newline)
+  lineStart: number; // Character offset in the joined document text.
+  lineEnd: number;
   depth: number;
   sectionNumber: string | null;
   title: string;
 }
 
 export interface NumberedCandidate extends Heading {
-  numbers: number[]; // "3.1" → [3, 1]
+  numbers: number[]; // Numeric levels parsed from the section label.
 }
 
 export interface PageSpan {
-  pageNumber: number | null; // null for DOCX
-  start: number; // where this page's text begins in the joined text
-  end: number; // where it ends
+  pageNumber: number | null; // Null when the source has no page information.
+  start: number; // Character offset in the joined document text.
+  end: number; // End offset in the joined document text.
 }
 
 export interface ChainNode {
   candidate: NumberedCandidate;
-  length: number; // headings in the outline so far, counting this one
+  length: number; // Number of headings in this outline chain.
   previous: ChainNode | null;
 }

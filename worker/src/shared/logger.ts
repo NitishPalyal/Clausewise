@@ -1,13 +1,3 @@
-/**
- * Centralized logger utility for the application.
- *
- * Provides a consistent logging interface across all modules.
- * Can be extended to support multiple transports (file, external services, etc.)
- * in the future.
- *
- * Emits only warnings and errors suitable for production diagnostics.
- */
-
 type LogLevel = "warn" | "error";
 
 interface LogEntry {
@@ -18,9 +8,7 @@ interface LogEntry {
   data?: unknown;
 }
 
-/**
- * Formats a log entry for console output.
- */
+/** Formats the timestamp, severity, and optional context for a log line. */
 function formatLogEntry(entry: LogEntry): string {
   const levelUpper = entry.level.toUpperCase().padEnd(5);
   const timestamp = entry.timestamp;
@@ -30,25 +18,16 @@ function formatLogEntry(entry: LogEntry): string {
   return `${timestamp} ${levelUpper}${context} ${message}`;
 }
 
-/**
- * Gets the color code for the log level (for terminal output).
- */
 function getLevelColor(level: LogLevel): string {
   const colors: Record<LogLevel, string> = {
-    warn: "\x1b[33m", // Yellow
-    error: "\x1b[31m", // Red
+    warn: "\x1b[33m",
+    error: "\x1b[31m",
   };
   return colors[level];
 }
 
-/**
- * Main logger object with methods for each log level.
- */
 export const logger = {
-  /**
-   * Warn level - warning messages for potentially problematic situations.
-   * Reports potentially problematic situations.
-   */
+  /** Logs a warning with optional context and details. */
   warn(message: string, context?: string, data?: unknown): void {
     const entry: LogEntry = {
       timestamp: new Date().toISOString(),
@@ -63,10 +42,7 @@ export const logger = {
     console.warn(`${color}${formatLogEntry(entry)}${reset}`, data || "");
   },
 
-  /**
-   * Error level - error messages for failures and exceptions.
-   * Reports failures and exceptions.
-   */
+  /** Logs an error and includes its full details outside production. */
   error(message: string, context?: string, error?: unknown): void {
     const entry: LogEntry = {
       timestamp: new Date().toISOString(),
@@ -82,7 +58,6 @@ export const logger = {
     const reset = "\x1b[0m";
     console.error(`${color}${formatLogEntry(entry)}${reset}`);
 
-    // In development, also print the full error object
     if (process.env.NODE_ENV !== "production" && error) {
       console.error(color, error, reset);
     }

@@ -9,6 +9,7 @@ import { retrievalPipeline } from "@/retrievalPipeline/retrievalPipeline";
 import { APIResponse } from "@/shared/types";
 import type { Citation } from "@/retrievalPipeline/citations/citations.types";
 
+/** Saves the user's message, runs retrieval, and returns an answer with citations. */
 export async function POST(request: NextRequest) {
   const { userId } = await auth();
   if (!userId) {

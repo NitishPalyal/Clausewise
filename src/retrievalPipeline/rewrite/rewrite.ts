@@ -1,6 +1,5 @@
-// src/retrievalPipeline/rewrite/rewrite.ts
 import { gemini } from "@/lib/ai.config.ts";
-import { RERANK_MODEL } from "@/shared/variable.ts"; // reusing the existing fast model — no need for a third one
+import { RERANK_MODEL } from "@/shared/variable.ts";
 import { rewriteResponseSchema } from "@/retrievalPipeline/rewrite/rewrite.types.ts";
 import type { ChatTurn } from "../generation/generation.types.ts";
 
@@ -28,17 +27,18 @@ async function callGemini(prompt: string): Promise<string> {
   return parsed.standaloneQuestion ?? "";
 }
 
+/** Resolves follow-up questions from chat history without blocking search on rewrite errors. */
 export async function rewriteStandalone(
   history: ChatTurn[],
   latestMessage: string,
   rewriteFn: (prompt: string) => Promise<string> = callGemini,
 ): Promise<string> {
-  if (history.length === 0) return latestMessage; // nothing to resolve against — skip the call
+  if (history.length === 0) return latestMessage;
 
   try {
     const rewritten = await rewriteFn(buildPrompt(history, latestMessage));
-    return rewritten.trim() || latestMessage; // empty/blank result also falls back
+    return rewritten.trim() || latestMessage;
   } catch {
-    return latestMessage; // a rewrite failure should never block search
+    return latestMessage;
   }
 }

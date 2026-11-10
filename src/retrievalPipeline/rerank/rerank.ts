@@ -1,5 +1,3 @@
-// worker/src/rag/retrievalPipeline/rerank/rerank.service.ts
-
 import type { RetrievedChunk } from "../vectorSearch/vectorSearch.types.ts";
 import type { RankedChunk } from "./rerank.types.ts";
 import { gemini } from "@/lib/ai.config.ts";
@@ -32,6 +30,7 @@ function fallbackOrder(candidates: RetrievedChunk[]): number[] {
   return candidates.slice(0, TOP_N).map((_, i) => i);
 }
 
+/** Uses model rankings when available and preserves vector order if ranking fails. */
 export async function rerankVectors(
   query: string,
   candidates: RetrievedChunk[],

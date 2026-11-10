@@ -7,6 +7,7 @@ import type { APIResponse } from "@/shared/types.ts";
 import * as DocumentVersionRepo from "@/repository/documentVersion/documentVersion.repository.ts";
 import * as UserRepo from "@/repository/user/user.repository.ts";
 
+/** Deletes a version for a tenant manager and then removes its stored file. */
 export async function DELETE(request: NextRequest) {
   const { userId } = await auth();
   if (!userId) {

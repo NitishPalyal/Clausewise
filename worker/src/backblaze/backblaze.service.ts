@@ -11,7 +11,7 @@ import {
   PutObjectCommand,
 } from "@aws-sdk/client-s3";
 
-// UPLOAD FILE TO STORAGE //
+/** Uploads a file to Backblaze and returns the generated object key. */
 export async function uploadToStorageService({
   buffer,
   fileType,
@@ -43,7 +43,7 @@ export async function uploadToStorageService({
   }
 }
 
-// DOWNLOAD FILE FROM STORAGR SERVICE //
+/** Downloads a stored object and returns its contents as a buffer. */
 export async function downloadFromStorageService(
   uploadedFileKey: string,
 ): Promise<Buffer> {
@@ -72,7 +72,7 @@ export async function downloadFromStorageService(
   }
 }
 
-// DELETE FILE FROM STORAGE SERVICE //
+/** Deletes an object by its Backblaze key. */
 export async function deleteFromStorageService(uploadedImageKey: string) {
   try {
     await b2.send(
@@ -91,7 +91,7 @@ export async function deleteFromStorageService(uploadedImageKey: string) {
   }
 }
 
-// GET UPLODED AND PROCESSES FILE URL //
+/** Creates a signed URL that allows temporary access to a stored object. */
 export async function getFileUrlFromStorageService(
   uploadedFileKey: string,
 ): Promise<string> {
@@ -103,7 +103,7 @@ export async function getFileUrlFromStorageService(
         Key: uploadedFileKey,
       }),
       {
-        expiresIn: 600, // 10 minutes
+        expiresIn: 600,
       },
     );
     return url;

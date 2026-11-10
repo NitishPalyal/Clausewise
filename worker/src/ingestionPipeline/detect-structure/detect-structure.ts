@@ -1,4 +1,3 @@
-// worker/src/rag/detect-structure/detect-structure.ts
 import type { Document } from "@langchain/core/documents";
 import type {
   DetectionMethod,
@@ -9,28 +8,22 @@ import type {
   PageSpan,
 } from "./detect-structure.types.ts";
 
-/* ────────────────────────────────────────────────────────────────
-   Settings — small numbers you can tune after testing on real SOPs
-   ──────────────────────────────────────────────────────────────── */
-const MAX_LINE_LENGTH = 200; // a longer line is a paragraph, never a heading
-const MAX_TITLE_LENGTH = 100; // characters
+// Require repeated formatting or numbering before treating text as an outline.
+const MAX_LINE_LENGTH = 200; // Longer lines are treated as body text.
+const MAX_TITLE_LENGTH = 100;
 const MAX_TITLE_WORDS = 12;
-const MIN_MARKED_HEADINGS = 2; // DOCX with 2+ real Word headings = trustworthy structure
-const MIN_NUMBERED_HEADINGS = 3; // 1–2 numbered lines are probably a list, not a structure
+const MIN_MARKED_HEADINGS = 2; // Require repeated DOCX heading styles.
+const MIN_NUMBERED_HEADINGS = 3; // Avoid mistaking a short numbered list for an outline.
 
-// "3.1 Material Inspection" → number "3.1", title "Material Inspection".
-// Also matches "1. PURPOSE", "1) Purpose" and "1.0 PURPOSE". The title must start with a capital letter.
+// Recognizes numbered headings while avoiding most numbered body text.
 const NUMBERED_LINE = /^\s*(\d{1,2}(?:\.\d{1,2}){0,3})[.)]?\s+([A-Z].*?)\s*$/;
 
-// "## Material Inspection" — how our DOCX extractor writes real Word headings
+// DOCX headings are converted to Markdown before structure detection.
 const MARKED_LINE = /^(#{1,6})\s+(.+?)\s*$/;
 
-// A number typed inside a heading's text: "3.1 Material Inspection"
 const LEADING_NUMBER = /^(\d{1,2}(?:\.\d{1,2}){0,3})[.)]?\s+(.+)$/;
 
-/* ────────────────────────────────────────────────────────────────
-   STEP 1 — join all pages into ONE string, but remember where each page is
-   ──────────────────────────────────────────────────────────────── */
+/** Joins page text and records offsets so sections can retain page references. */
 function joinPages(docs: Document[]): { text: string; spans: PageSpan[] } {
   let text = "";
   const spans: PageSpan[] = [];
@@ -39,7 +32,7 @@ function joinPages(docs: Document[]): { text: string; spans: PageSpan[] } {
     const start = text.length;
     text += doc.pageContent;
     spans.push({ pageNumber: readPageNumber(doc), start, end: text.length });
-    text += "\n"; // separator between pages; it belongs to no page
+    text += "\n";
   }
   return { text, spans };
 }
@@ -49,7 +42,7 @@ function readPageNumber(doc: Document): number | null {
   return typeof page === "number" ? page : null;
 }
 
-// Which pages does the text between `start` and `end` touch?
+/** Returns the first and last PDF pages overlapped by a text range. */
 function pagesTouched(start: number, end: number, spans: PageSpan[]) {
   const touched = spans.filter(
     (s) => s.pageNumber !== null && s.start < end && s.end > start,
@@ -60,17 +53,13 @@ function pagesTouched(start: number, end: number, spans: PageSpan[]) {
   };
 }
 
-/* ────────────────────────────────────────────────────────────────
-   STEP 2 — find heading lines
-   ──────────────────────────────────────────────────────────────── */
-
-// Split into lines but remember where each line starts in the joined text.
+/** Splits text into lines while retaining each line's character offset. */
 function splitLines(text: string): { line: string; start: number }[] {
   const lines: { line: string; start: number }[] = [];
   let start = 0;
   for (const line of text.split("\n")) {
     lines.push({ line, start });
-    start += line.length + 1; // +1 for the "\n" we split on
+    start += line.length + 1;
   }
   return lines;
 }
@@ -78,43 +67,40 @@ function splitLines(text: string): { line: string; start: number }[] {
 const cleanTitle = (raw: string) =>
   raw.replace(/\s+/g, " ").replace(/[\s:]+$/, "");
 
-// Rule-of-thumb checks: does this text LOOK like a heading rather than a sentence?
+/** Rejects long or sentence-like text that is unlikely to be a heading. */
 function looksLikeHeadingText(title: string): boolean {
   if (title.length === 0 || title.length > MAX_TITLE_LENGTH) return false;
   if (title.split(" ").length > MAX_TITLE_WORDS) return false;
-  if (/[.,;]$/.test(title)) return false; // sentences end with punctuation, headings don't
-  if (/\.{3,}/.test(title)) return false; // "Purpose ........ 3" is a table-of-contents line
+  if (/[.,;]$/.test(title)) return false;
+  if (/\.{3,}/.test(title)) return false;
   return true;
 }
 
-// "3.1" → [3, 1].  "1.0" is just a top-level "1", a common style in manufacturing SOPs.
+/** Converts a section label to its numeric levels; treats "1.0" as level one. */
 function parseNumbers(label: string): number[] {
   const parts = label.split(".").map(Number);
   if (parts.length === 2 && parts[1] === 0) return [parts[0] ?? 0];
   return parts;
 }
 
-// After heading `previous`, is `next` a heading that could really come next?
-//   after 3   → 3.1 (first child) or 4 (next sibling)
-//   after 3.1 → 3.1.1 (first child), 3.2 (next sibling) or 4 (next sibling of the parent)
+/** Checks whether the next numbered heading follows the current outline. */
 function isValidNext(previous: number[], next: number[]): boolean {
   const depth = next.length;
-  if (depth > previous.length + 1) return false; // can't skip a level: 3 → 3.1.1
+  if (depth > previous.length + 1) return false;
 
   for (let i = 0; i < depth - 1; i++) {
-    if (next[i] !== previous[i]) return false; // must stay under the same parents
+    if (next[i] !== previous[i]) return false;
   }
 
   const last = next[depth - 1];
   if (last === undefined) return false;
-  if (depth === previous.length + 1) return last === 1; // first child must be x.1
+  if (depth === previous.length + 1) return last === 1;
 
   const before = previous[depth - 1];
-  return before !== undefined && last === before + 1; // next sibling counts up by exactly 1
+  return before !== undefined && last === before + 1;
 }
 
-// From ALL numbered-looking lines, keep the longest run that counts up like a real outline
-// (1 → 2 → 3 → 3.1 → 3.2 → 4 ...). Lines that break the counting (list steps, stray numbers) are dropped.
+/** Keeps the longest consistently numbered outline and drops unrelated numbered lines. */
 function longestValidOutline(
   candidates: NumberedCandidate[],
 ): NumberedCandidate[] {
@@ -122,13 +108,11 @@ function longestValidOutline(
   let best: ChainNode | null = null;
 
   for (const candidate of candidates) {
-    // Option A: start a new outline here (only top-level numbers can start one)
     let node: ChainNode | null =
       candidate.numbers.length === 1
         ? { candidate, length: 1, previous: null }
         : null;
 
-    // Option B: continue the longest outline this line is allowed to follow
     for (const earlier of nodes) {
       if (!isValidNext(earlier.candidate.numbers, candidate.numbers)) continue;
       if (node === null || earlier.length + 1 >= node.length) {
@@ -136,18 +120,17 @@ function longestValidOutline(
       }
     }
 
-    if (node === null) continue; // this line cannot belong to any outline
+    if (node === null) continue;
     nodes.push(node);
-    if (best === null || node.length >= best.length) best = node; // ties → the later one wins
+    if (best === null || node.length >= best.length) best = node;
   }
 
-  // Walk backwards from the end of the best outline to collect its headings
   const outline: NumberedCandidate[] = [];
   for (let n = best; n !== null; n = n.previous) outline.unshift(n.candidate);
   return outline;
 }
 
-// Detector 1 — numbered headings: "1. Purpose", "3.1 Material Inspection" (PDFs, and typed DOCX numbers)
+/** Finds numbered headings and retains only candidates that form a valid outline. */
 function findNumberedHeadings(text: string): Heading[] {
   const candidates: NumberedCandidate[] = [];
 
@@ -176,7 +159,7 @@ function findNumberedHeadings(text: string): Heading[] {
   return longestValidOutline(candidates);
 }
 
-// Detector 2 — marked headings: "## Material Inspection" (DOCX with real Word heading styles)
+/** Finds DOCX headings marked by the extractor's Markdown conversion. */
 function findMarkedHeadings(text: string): Heading[] {
   const headings: Heading[] = [];
 
@@ -186,12 +169,11 @@ function findMarkedHeadings(text: string): Heading[] {
     const [, hashes, rawTitle] = match;
     if (!hashes || !rawTitle) continue;
 
-    // Word may also contain a typed number: "## 3.1 Material Inspection"
     const typed = LEADING_NUMBER.exec(rawTitle);
     headings.push({
       lineStart: start,
       lineEnd: start + line.length,
-      depth: hashes.length, // "##" = level 2
+      depth: hashes.length,
       sectionNumber: typed?.[1] ?? null,
       title: cleanTitle(typed?.[2] ?? rawTitle),
     });
@@ -199,12 +181,10 @@ function findMarkedHeadings(text: string): Heading[] {
   return headings;
 }
 
-/* ────────────────────────────────────────────────────────────────
-   STEP 3 — cut the text at every heading and build the sections
-   ──────────────────────────────────────────────────────────────── */
 const formatLabel = (h: Heading) =>
   h.sectionNumber ? `${h.sectionNumber} ${h.title}` : h.title;
 
+/** Builds section bodies and heading paths from the detected heading lines. */
 function buildSections(
   text: string,
   headings: Heading[],
@@ -213,7 +193,6 @@ function buildSections(
 ): Section[] {
   const sections: Section[] = [];
 
-  // Text before the first heading (document title, revision table, ...) becomes a "Preamble"
   const firstHeadingStart = headings[0]?.lineStart ?? text.length;
   const preamble = text.slice(0, firstHeadingStart).trim();
   if (preamble) {
@@ -230,14 +209,13 @@ function buildSections(
     });
   }
 
-  // One section per heading. `parents` remembers the headings above the current one.
   const parents: { depth: number; label: string }[] = [];
 
   headings.forEach((heading, i) => {
-    const bodyStart = heading.lineEnd + 1; // skip the newline after the heading
-    const bodyEnd = headings[i + 1]?.lineStart ?? text.length; // body runs until the next heading
+    const bodyStart = heading.lineEnd + 1;
+    const bodyEnd = headings[i + 1]?.lineStart ?? text.length;
 
-    // A heading at the same or a deeper level than the last parent is not that parent's child
+    // Keep only headings that can be parents of the current level.
     while (
       parents.length > 0 &&
       (parents[parents.length - 1]?.depth ?? 0) >= heading.depth
@@ -247,7 +225,8 @@ function buildSections(
     parents.push({ depth: heading.depth, label: formatLabel(heading) });
 
     const content = text.slice(bodyStart, bodyEnd).trim();
-    if (!content) return; // heading with no text of its own (e.g. "3 Procedure" with only sub-sections)
+    // Keep empty headings in the parent stack so child paths remain complete.
+    if (!content) return;
 
     sections.push({
       sectionNumber: heading.sectionNumber,
@@ -265,21 +244,18 @@ function buildSections(
   return sections;
 }
 
-/* ────────────────────────────────────────────────────────────────
-   Fallbacks — never return nothing
-   ──────────────────────────────────────────────────────────────── */
-
-// PDF with no headings found: one section per page, so citations can still say "page 4"
+/** Uses page boundaries when a PDF has no reliable headings. */
 function pageFallback(text: string, spans: PageSpan[]): Section[] {
   const sections: Section[] = [];
   for (const span of spans) {
-    if (span.pageNumber === null) return []; // no page numbers (DOCX) → this fallback does not apply
+    // DOCX has no page boundaries, so it uses the whole-document fallback.
+    if (span.pageNumber === null) return [];
     const content = text.slice(span.start, span.end).trim();
     if (!content) continue;
     sections.push({
       sectionNumber: null,
       title: `Page ${span.pageNumber}`,
-      headingPath: [], // empty = "no structure known"
+      headingPath: [],
       depth: 1,
       content,
       pageStart: span.pageNumber,
@@ -292,7 +268,7 @@ function pageFallback(text: string, spans: PageSpan[]): Section[] {
   return sections;
 }
 
-// DOCX with no headings found: the whole file is one section
+/** Keeps an unstructured document searchable as a single section. */
 function documentFallback(text: string): Section[] {
   const content = text.trim();
   if (!content) return [];
@@ -312,14 +288,11 @@ function documentFallback(text: string): Section[] {
   ];
 }
 
-/* ────────────────────────────────────────────────────────────────
-   The one function the pipeline calls
-   ──────────────────────────────────────────────────────────────── */
+/** Detects document sections, falling back to page or whole-document boundaries. */
 export function detectStructure(docs: Document[]): Section[] {
   if (docs.length === 0) return [];
   const { text, spans } = joinPages(docs);
 
-  // Try 1 — real Word headings. Only trusted when the DOCX extractor says it marked them.
   if (docs.some((d) => d.metadata.headingFormat === "markdown")) {
     const marked = findMarkedHeadings(text);
     if (marked.length >= MIN_MARKED_HEADINGS) {
@@ -327,15 +300,11 @@ export function detectStructure(docs: Document[]): Section[] {
     }
   }
 
-  // Try 2 — numbered headings ("3.1 Material Inspection")
   const numbered = findNumberedHeadings(text);
   if (numbered.length >= MIN_NUMBERED_HEADINGS) {
     return buildSections(text, numbered, spans, "numbered-headings");
   }
 
-  // Try 3 (later) — ask Gemini to find the headings. It would plug in right here.
-
-  // Last resort — never lose the text
   const byPage = pageFallback(text, spans);
   return byPage.length > 0 ? byPage : documentFallback(text);
 }

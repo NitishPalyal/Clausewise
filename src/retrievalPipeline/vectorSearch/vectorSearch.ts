@@ -1,4 +1,3 @@
-// worker/src/rag/retrievalPipeline/vectorSearch/vectorSearch.ts
 import { prisma } from "@/lib/prisma.ts";
 import type { RetrievedChunk } from "./vectorSearch.types.ts";
 import {
@@ -11,6 +10,7 @@ function toVectorLiteral(vector: number[]): string {
   return `[${vector.join(",")}]`;
 }
 
+/** Searches only the tenant's current document versions, ordered by vector distance. */
 export async function vectorSearch(
   queryEmbedding: number[],
   tenantId: string,

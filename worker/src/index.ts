@@ -1,4 +1,5 @@
-import "./queue/documentProcessing.worker.ts"; // importing this line starts the Worker
+// Importing the worker module registers the queue processor.
+import "./queue/documentProcessing.worker.ts";
 
 console.log("Worker started, listening for jobs...");
 
