@@ -74,8 +74,8 @@ export async function createNextVersion({
     return { documentId: version.documentId, documentVersionId: version.id };
   });
 }
-// Deletes a version and makes the newest remaining version current.
 
+// Deletes a version and makes the newest remaining version current.
 export async function deleteVersionForTenant(
   documentVersionId: string,
   tenantId: string,
@@ -114,5 +114,20 @@ export async function deleteVersionForTenant(
     }
 
     return { fileUrl: version.fileUrl };
+  });
+}
+
+export async function findDocumentVersionFileForTenant(
+  documentId: string,
+  documentVersionId: string,
+  tenantId: string,
+) {
+  return prisma.documentVersion.findFirst({
+    where: {
+      id: documentVersionId,
+      documentId,
+      document: { tenantId },
+    },
+    select: { fileUrl: true },
   });
 }

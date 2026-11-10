@@ -47,6 +47,7 @@ export async function findDocumentDetailsForTenant(
           uploadedAt: true,
           isCurrent: true,
           status: true,
+          fileUrl: true,
         },
       },
     },
