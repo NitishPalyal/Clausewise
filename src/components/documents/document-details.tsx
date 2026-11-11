@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { AlertTriangle, ArrowLeft, FileText, Plus, Trash2 } from "lucide-react";
 
 import type { DocumentType } from "@/generated/prisma/enums";
+import type { APIResponse } from "@/shared/types";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -138,48 +139,19 @@ export function DocumentDetails({
         body: JSON.stringify({ tenantId, documentId: document.id }),
       });
 
-      const result: unknown = await response.json().catch(() => null);
-      const resultMessage =
-        typeof result === "object" &&
-        result !== null &&
-        "message" in result &&
-        typeof result.message === "string"
-          ? result.message
-          : null;
-      const resultDetails =
-        typeof result === "object" &&
-        result !== null &&
-        "error" in result &&
-        typeof result.error === "object" &&
-        result.error !== null &&
-        "details" in result.error &&
-        typeof result.error.details === "string"
-          ? result.error.details
-          : null;
-      const succeeded =
-        typeof result === "object" &&
-        result !== null &&
-        "success" in result &&
-        result.success === true;
-      const warning =
-        typeof result === "object" &&
-        result !== null &&
-        "warning" in result &&
-        typeof result.warning === "string"
-          ? result.warning
-          : null;
+      const result: APIResponse<{ documentId: string }> = await response.json();
 
-      if (!response.ok || !succeeded) {
+      if (!response.ok || !result.success) {
         throw new Error(
-          resultDetails ||
-            resultMessage ||
+          result.error?.details ||
+            result.message ||
             `The document could not be deleted (HTTP ${response.status}).`,
         );
       }
 
       setIsDeleteDialogOpen(false);
       router.replace(
-        warning
+        result.warning
           ? "/documents?notice=storage-cleanup-failed"
           : "/documents",
       );
