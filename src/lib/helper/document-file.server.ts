@@ -7,8 +7,8 @@ import { getDocumentFileType } from "@/lib/helper/getDocumentFileType.helper";
 import {
   downloadFromStorageService,
   getFileUrlFromStorageService,
-} from "../../../../worker/src/backblaze/backblaze.service.ts";
-import { extractDocxPreviewText } from "../../../../worker/src/ingestionPipeline/extraction/docxPreview.service.ts";
+} from "../../../worker/src/backblaze/backblaze.service.ts";
+import { extractDocxPreviewText } from "../../../worker/src/ingestionPipeline/extraction/docxPreview.service.ts";
 
 type DocumentFileAccess = {
   fileKey: string;
