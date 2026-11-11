@@ -15,11 +15,17 @@ export const documentWorker = new Worker(
   QUEUE_NAME,
   async (job) => {
     const jobPayload = documentProcessingJobDataSchema.parse(job.data);
+
     await ingestionPipline({
       tenantId: jobPayload.tenantId,
       fileType: jobPayload.fileType,
       documentVersionId: jobPayload.documentVersionId,
       uploadedFileKey: jobPayload.uploadedFileKey,
+
+      // Forward pipeline progress updates to BullMQ.
+      onProgress: async (progress) => {
+        await job.updateProgress(progress);
+      },
     });
   },
   {
