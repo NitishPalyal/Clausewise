@@ -58,7 +58,20 @@ export async function ingestionPipline({
     message: "Generating embeddings",
   });
 
-  const embedded = await embedChunks(chunks);
+  const embedded = await embedChunks(
+    chunks,
+    undefined,
+    async (completedBatches, totalBatches) => {
+      const percentage =
+        50 + Math.round((completedBatches / totalBatches) * 35);
+
+      await reportProgress({
+        stage: "embedding",
+        percentage,
+        message: `Generating embeddings: batch ${completedBatches} of ${totalBatches}`,
+      });
+    },
+  );
 
   await reportProgress({
     stage: "saving",
