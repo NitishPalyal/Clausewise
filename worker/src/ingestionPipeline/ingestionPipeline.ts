@@ -2,7 +2,7 @@ import { extractText } from "./extraction/extraction.service.ts";
 import { detectStructure } from "./detect-structure/detect-structure.ts";
 import { chunkBySection } from "./chunking/chunking.ts";
 import { embedChunks } from "./embedding/embedding.ts";
-import { prisma } from "../lib/prisma.ts";
+import * as ChunkRepo from "../repository/chunk/chunk.repository.ts";
 import type {
   IngestionPipelineParams,
   IngestionProgress,
@@ -66,9 +66,7 @@ export async function ingestionPipline({
     message: "Saving document chunks",
   });
 
-  await prisma.chunk.createMany({
-    data: embedded.map((c) => ({ ...c, documentVersionId, tenantId })),
-  });
+  await ChunkRepo.storeChunks(embedded, documentVersionId, tenantId);
 
   await reportProgress({
     stage: "saving",
