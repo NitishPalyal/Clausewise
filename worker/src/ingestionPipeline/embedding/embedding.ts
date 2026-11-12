@@ -64,20 +64,31 @@ async function callGemini(texts: string[]): Promise<number[][]> {
 }
 
 /** Embeds chunks in batches to stay within the model request limit. */
+
+/** Embeds chunks in batches and reports progress after each successful batch. */
 export async function embedChunks(
   chunks: Chunk[],
   embedFn: (texts: string[]) => Promise<number[][]> = callGemini,
+  onBatchProgress?: (
+    completedBatches: number,
+    totalBatches: number,
+  ) => void | Promise<void>,
 ): Promise<EmbeddedChunk[]> {
   const embedded: EmbeddedChunk[] = [];
+  const batches = batchOf(chunks, BATCH_SIZE);
 
-  for (const batch of batchOf(chunks, BATCH_SIZE)) {
+  for (const [index, batch] of batches.entries()) {
     const vectors = await embedBatchWithRetry(
       batch.map((c) => c.text),
       embedFn,
     );
+
     batch.forEach((chunk, i) =>
       embedded.push({ ...chunk, embedding: vectors[i]! }),
     );
+
+    // Report progress after this batch has been successfully embedded.
+    await onBatchProgress?.(index + 1, batches.length);
   }
 
   return embedded;
