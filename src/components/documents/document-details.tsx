@@ -49,6 +49,46 @@ type DocumentJobEvent = {
   documentVersionId: string;
 };
 
+type IngestionStage =
+  | "downloading"
+  | "extracting"
+  | "structuring"
+  | "chunking"
+  | "embedding"
+  | "saving";
+
+type IngestionProgress = {
+  stage: IngestionStage;
+  percentage: number;
+  message: string;
+};
+
+type DocumentProgressEvent = DocumentJobEvent & {
+  progress: unknown;
+};
+
+function isIngestionProgress(value: unknown): value is IngestionProgress {
+  if (typeof value !== "object" || value === null) return false;
+
+  const progress = value as Record<string, unknown>;
+
+  return (
+    [
+      "downloading",
+      "extracting",
+      "structuring",
+      "chunking",
+      "embedding",
+      "saving",
+    ].includes(progress.stage as string) &&
+    typeof progress.percentage === "number" &&
+    Number.isFinite(progress.percentage) &&
+    progress.percentage >= 0 &&
+    progress.percentage <= 100 &&
+    typeof progress.message === "string"
+  );
+}
+
 const DOCUMENT_STATUS_LABELS: Record<DocumentVersionStatus, string> = {
   pending: "Queued",
   uploading: "Processing",
@@ -80,12 +120,17 @@ export function DocumentDetails({
   const [versionStatuses, setVersionStatuses] = useState<
     Partial<Record<string, DocumentVersionStatus>>
   >({});
+  const [versionProgress, setVersionProgress] = useState<
+    Partial<Record<string, IngestionProgress>>
+  >({});
+
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const versions = document.versions.map((version) => ({
     ...version,
     status: versionStatuses[version.id] ?? version.status,
+    progress: versionProgress[version.id],
   }));
 
   // Listen for document-processing events from the Socket.IO server.
@@ -104,25 +149,65 @@ export function DocumentDetails({
       }));
     }
 
+    function clearVersionProgress(documentVersionId: string) {
+      setVersionProgress((currentProgress) => {
+        const updatedProgress = { ...currentProgress };
+        delete updatedProgress[documentVersionId];
+        return updatedProgress;
+      });
+    }
+
     const handleProcessing = (payload: DocumentJobEvent) => {
+      if (typeof payload?.documentVersionId !== "string") return;
+
+      clearVersionProgress(payload.documentVersionId);
       updateVersionStatus(payload, "uploading");
     };
 
+    const handleProgress = (payload: DocumentProgressEvent) => {
+      const documentVersionId = payload?.documentVersionId;
+      const progress = payload?.progress;
+
+      if (
+        typeof documentVersionId !== "string" ||
+        !isIngestionProgress(progress)
+      ) {
+        return;
+      }
+
+      setVersionStatuses((currentStatuses) => ({
+        ...currentStatuses,
+        [documentVersionId]: "uploading",
+      }));
+
+      setVersionProgress((currentProgress) => ({
+        ...currentProgress,
+        [documentVersionId]: progress,
+      }));
+    };
+
     const handleReady = (payload: DocumentJobEvent) => {
+      if (typeof payload?.documentVersionId !== "string") return;
+
+      clearVersionProgress(payload.documentVersionId);
       updateVersionStatus(payload, "uploaded");
     };
 
     const handleFailed = (payload: DocumentJobEvent) => {
+      if (typeof payload?.documentVersionId !== "string") return;
+
+      clearVersionProgress(payload.documentVersionId);
       updateVersionStatus(payload, "failed");
     };
 
     socket.on("document:processing", handleProcessing);
+    socket.on("document:progress", handleProgress);
     socket.on("document:ready", handleReady);
     socket.on("document:failed", handleFailed);
 
-    // Remove these exact listeners when the component unmounts.
     return () => {
       socket.off("document:processing", handleProcessing);
+      socket.off("document:progress", handleProgress);
       socket.off("document:ready", handleReady);
       socket.off("document:failed", handleFailed);
     };
@@ -270,7 +355,7 @@ export function DocumentDetails({
                     v{version.versionNumber}
                   </span>
 
-                  <div>
+                  <div className="min-w-0 flex-1">
                     <p className="text-sm font-medium">
                       Version {version.versionNumber}
                     </p>
@@ -278,6 +363,33 @@ export function DocumentDetails({
                     <p className="mt-0.5 text-xs text-muted-foreground">
                       Uploaded {formatDate(version.uploadedAt)}
                     </p>
+
+                    {version.progress && (
+                      <div className="mt-3 w-full max-w-sm space-y-1.5">
+                        <div className="flex items-center justify-between gap-3 text-xs text-muted-foreground">
+                          <span>{version.progress.message}</span>
+                          <span className="shrink-0 tabular-nums">
+                            {version.progress.percentage}%
+                          </span>
+                        </div>
+
+                        <div
+                          role="progressbar"
+                          aria-label={`Processing version ${version.versionNumber}`}
+                          aria-valuemin={0}
+                          aria-valuemax={100}
+                          aria-valuenow={version.progress.percentage}
+                          className="h-2 w-full overflow-hidden rounded-full bg-secondary"
+                        >
+                          <div
+                            className="h-full rounded-full bg-primary transition-[width] duration-300"
+                            style={{
+                              width: `${version.progress.percentage}%`,
+                            }}
+                          />
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
 
