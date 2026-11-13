@@ -84,4 +84,26 @@ describe("embedChunks", () => {
     expect(batchCallCount).toBe(3);
     expect(result.every((r) => r.embedding[0] === r.text.length)).toBe(true);
   });
+
+  it("reports progress after every successfully completed batch", async () => {
+    const chunks = Array.from({ length: 45 }, (_, i) =>
+      makeChunk({ text: `chunk text number ${i}` }),
+    );
+
+    const fakeEmbed = vi.fn(async (texts: string[]) =>
+      texts.map(() => [1, 0, 0]),
+    );
+
+    const onBatchProgress = vi.fn(
+      async (_completedBatches: number, _totalBatches: number) => {},
+    );
+
+    await embedChunks(chunks, fakeEmbed, onBatchProgress);
+
+    expect(onBatchProgress.mock.calls).toEqual([
+      [1, 3],
+      [2, 3],
+      [3, 3],
+    ]);
+  });
 });
