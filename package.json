@@ -14,7 +14,8 @@
     "db:studio": "prisma studio",
     "db:reset": "prisma migrate reset",
     "db:seed": "prisma db seed",
-    "lint": "eslint"
+    "lint": "eslint",
+    "test": "vitest run src/"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1086.0",
