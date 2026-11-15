@@ -43,7 +43,10 @@ export default function RealtimeTestPage() {
 
     const onConnectError = (error: Error) => {
       setSocketStatus("error");
-      setErrorMessage(error.message);
+      console.error("Socket.IO connection failed:", error);
+      setErrorMessage(
+        "Unable to connect to the real-time service. Please try again later.",
+      );
     };
 
     socket.on("connect", onConnect);

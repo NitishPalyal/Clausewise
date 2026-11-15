@@ -7,7 +7,10 @@ import { ChatInput } from "@/components/dashboard/chat-input";
 import { EmptyState } from "@/components/dashboard/empty-state";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import type { ChatMessage } from "@/types/chat-types";
-import type { APIResponse } from "@/shared/types";
+import {
+  fetchApiResponse,
+  getUserFacingErrorMessage,
+} from "@/lib/api-response";
 
 // Simple ID generator — not crypto, just for UI keys
 let _msgCounter = 10;
@@ -64,19 +67,15 @@ export default function DashboardPage() {
       formData.set("tenantId", orgId);
       if (chatId) formData.set("existingChatId", chatId);
 
-      const response = await fetch("/api/chat/sendMessage", {
-        method: "POST",
-        body: formData,
-      });
-      const result: APIResponse<{
+      const result = await fetchApiResponse<{
         chatId: string;
         response: string;
         citations: NonNullable<ChatMessage["citations"]>;
-      }> = await response.json();
-
-      if (!response.ok || !result.success) {
-        throw new Error(result.message || "Unable to send your question.");
-      }
+      }>(
+        "/api/chat/sendMessage",
+        { method: "POST", body: formData },
+        "We couldn't send your question.",
+      );
 
       setChatId(result.data.chatId);
       setMessages((previous) =>
@@ -98,9 +97,10 @@ export default function DashboardPage() {
         previous.filter((message) => message.id !== loadingId),
       );
       setError(
-        sendError instanceof Error
-          ? sendError.message
-          : "Unable to send your question. Please try again.",
+        getUserFacingErrorMessage(
+          sendError,
+          "We couldn't send your question. Please try again.",
+        ),
       );
     } finally {
       setIsLoading(false);

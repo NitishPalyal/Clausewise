@@ -8,7 +8,10 @@ import { ChatInput } from "@/components/dashboard/chat-input";
 import { ChatMessageItem } from "@/components/dashboard/chat-message";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import type { ChatMessage } from "@/types/chat-types";
-import type { APIResponse } from "@/shared/types";
+import {
+  fetchApiResponse,
+  getUserFacingErrorMessage,
+} from "@/lib/api-response";
 
 export default function ChatPage() {
   const { chatId } = useParams<{ chatId: string }>();
@@ -26,22 +29,18 @@ export default function ChatPage() {
       setIsLoading(true);
       setError(null);
       try {
-        const response = await fetch(
-          `/api/chat/getMessages?chatId=${encodeURIComponent(chatId)}`,
-          { signal: controller.signal },
-        );
-        const result: APIResponse<{
+        const result = await fetchApiResponse<{
           messages: {
             id: string;
             role: string;
             content: string;
             timestamp: string;
           }[];
-        }> = await response.json();
-
-        if (!response.ok || !result.success) {
-          throw new Error(result.message || "Unable to load this chat.");
-        }
+        }>(
+          `/api/chat/getMessages?chatId=${encodeURIComponent(chatId)}`,
+          { signal: controller.signal },
+          "We couldn't load this conversation.",
+        );
 
         setMessages(
           result.data.messages.map((message) => ({
@@ -56,9 +55,10 @@ export default function ChatPage() {
           return;
         }
         setError(
-          loadError instanceof Error
-            ? loadError.message
-            : "Unable to load this chat.",
+          getUserFacingErrorMessage(
+            loadError,
+            "We couldn't load this conversation. Please try again.",
+          ),
         );
       } finally {
         if (!controller.signal.aborted) setIsLoading(false);
@@ -102,19 +102,15 @@ export default function ChatPage() {
       formData.set("existingChatId", chatId);
       formData.set("tenantId", orgId);
 
-      const response = await fetch("/api/chat/sendMessage", {
-        method: "POST",
-        body: formData,
-      });
-      const result: APIResponse<{
+      const result = await fetchApiResponse<{
         chatId: string;
         response: string;
         citations: NonNullable<ChatMessage["citations"]>;
-      }> = await response.json();
-
-      if (!response.ok || !result.success) {
-        throw new Error(result.message || "Unable to send your question.");
-      }
+      }>(
+        "/api/chat/sendMessage",
+        { method: "POST", body: formData },
+        "We couldn't send your question.",
+      );
 
       setMessages((current) =>
         current.map((message) =>
@@ -135,9 +131,10 @@ export default function ChatPage() {
         current.filter((message) => message.id !== loadingMessage.id),
       );
       setError(
-        sendError instanceof Error
-          ? sendError.message
-          : "Unable to send your question. Please try again.",
+        getUserFacingErrorMessage(
+          sendError,
+          "We couldn't send your question. Please try again.",
+        ),
       );
     } finally {
       setIsSending(false);
