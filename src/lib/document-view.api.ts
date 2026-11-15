@@ -1,4 +1,4 @@
-import type { APIResponse } from "@/shared/types";
+import { fetchApiResponse } from "@/lib/api-response";
 
 function getVersionPath(documentId: string, versionId: string) {
   const encodedDocumentId = encodeURIComponent(documentId);
@@ -20,17 +20,14 @@ export async function getDocxPreviewText(
   versionId: string,
   signal?: AbortSignal,
 ): Promise<string> {
-  const response = await fetch(getDocumentPreviewUrl(documentId, versionId), {
-    cache: "no-store",
-    ...(signal ? { signal } : {}),
-  });
-
-  const result: APIResponse<{ text: string }> = await response.json();
-  if (!response.ok || !result.success) {
-    throw new Error(
-      result.message || "The document preview could not be loaded.",
-    );
-  }
+  const result = await fetchApiResponse<{ text: string }>(
+    getDocumentPreviewUrl(documentId, versionId),
+    {
+      cache: "no-store",
+      ...(signal ? { signal } : {}),
+    },
+    "We couldn't load this document preview.",
+  );
 
   return result.data.text;
 }
