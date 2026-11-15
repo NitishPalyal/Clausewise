@@ -8,6 +8,7 @@ import * as MessageRepo from "@/repository/message/messages.repostory.ts";
 import { retrievalPipeline } from "@/retrievalPipeline/retrievalPipeline";
 import { APIResponse } from "@/shared/types";
 import type { Citation } from "@/retrievalPipeline/citations/citations.types";
+import { publishChatReplyReady } from "@/lib/redis/chatNotification";
 
 /** Saves the user's message, runs retrieval, and returns an answer with citations. */
 export async function POST(request: NextRequest) {
@@ -42,6 +43,17 @@ export async function POST(request: NextRequest) {
     chatId,
   );
   await MessageRepo.createMessage(chatId, "ai", aiResponse.answer);
+  // Notify the user's connected devices that an AI reply is ready.
+  try {
+    await publishChatReplyReady({
+      userId,
+      chatId,
+    });
+  } catch (error) {
+    // The AI response is already saved, so notification failure
+    // should not make the chat API request fail.
+    console.error("Failed to publish chat reply notification:", error);
+  }
   const response: APIResponse<{
     chatId: string;
     response: string;
