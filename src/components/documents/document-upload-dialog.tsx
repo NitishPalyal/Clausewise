@@ -3,7 +3,10 @@
 import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import type { DocumentType } from "@/generated/prisma/enums";
-import type { APIResponse } from "@/shared/types";
+import {
+  fetchApiResponse,
+  getUserFacingErrorMessage,
+} from "@/lib/api-response";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -76,25 +79,23 @@ export function DocumentUploadDialog({
 
     setIsUploading(true);
     try {
-      const response = await fetch(
+      await fetchApiResponse(
         isNewDocument
           ? "/api/documents/uploadNew"
           : "/api/documents/uploadNewVersion",
         { method: "POST", body: formData },
+        "We couldn't upload this document.",
       );
-      const result: APIResponse = await response.json();
-      if (!response.ok || !result.success) {
-        throw new Error(result.message || "The upload could not be completed.");
-      }
 
       form.reset();
       onClose();
       router.refresh();
     } catch (error) {
       setErrorMessage(
-        error instanceof Error
-          ? error.message
-          : "The upload could not be completed. Please try again.",
+        getUserFacingErrorMessage(
+          error,
+          "We couldn't upload this document. Please try again.",
+        ),
       );
     } finally {
       setIsUploading(false);

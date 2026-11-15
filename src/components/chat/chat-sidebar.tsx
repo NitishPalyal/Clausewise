@@ -18,7 +18,10 @@ import {
   SidebarMenuItem,
   SidebarSeparator,
 } from "@/components/ui/sidebar";
-import type { APIResponse } from "@/shared/types";
+import {
+  fetchApiResponse,
+  getUserFacingErrorMessage,
+} from "@/lib/api-response";
 
 interface ChatSummary {
   id: string;
@@ -37,24 +40,21 @@ export function ChatSidebar() {
 
     async function loadChats() {
       try {
-        const response = await fetch("/api/chat/getChats", {
-          signal: controller.signal,
-        });
-        const result: APIResponse<{ chats: ChatSummary[] }> =
-          await response.json();
-
-        if (!response.ok || !result.success) {
-          throw new Error(result.message || "Unable to load chats.");
-        }
+        const result = await fetchApiResponse<{ chats: ChatSummary[] }>(
+          "/api/chat/getChats",
+          { signal: controller.signal },
+          "We couldn't load your conversations.",
+        );
         setChats(result.data.chats);
       } catch (loadError) {
         if (loadError instanceof Error && loadError.name === "AbortError") {
           return;
         }
         setError(
-          loadError instanceof Error
-            ? loadError.message
-            : "Unable to load chats.",
+          getUserFacingErrorMessage(
+            loadError,
+            "We couldn't load your conversations. Please try again.",
+          ),
         );
       } finally {
         if (!controller.signal.aborted) setIsLoading(false);

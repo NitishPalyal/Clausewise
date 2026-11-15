@@ -6,7 +6,10 @@ import { useRouter } from "next/navigation";
 import { AlertTriangle, ArrowLeft, FileText, Plus, Trash2 } from "lucide-react";
 
 import type { DocumentType } from "@/generated/prisma/enums";
-import type { APIResponse } from "@/shared/types";
+import {
+  fetchApiResponse,
+  getUserFacingErrorMessage,
+} from "@/lib/api-response";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -218,21 +221,15 @@ export function DocumentDetails({
     setIsDeleting(true);
 
     try {
-      const response = await fetch("/api/documents/delete", {
-        method: "DELETE",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ tenantId, documentId: document.id }),
-      });
-
-      const result: APIResponse<{ documentId: string }> = await response.json();
-
-      if (!response.ok || !result.success) {
-        throw new Error(
-          result.error?.details ||
-            result.message ||
-            `The document could not be deleted (HTTP ${response.status}).`,
-        );
-      }
+      const result = await fetchApiResponse<{ documentId: string }>(
+        "/api/documents/delete",
+        {
+          method: "DELETE",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ tenantId, documentId: document.id }),
+        },
+        "We couldn't delete this document.",
+      );
 
       setIsDeleteDialogOpen(false);
       router.replace(
@@ -243,9 +240,10 @@ export function DocumentDetails({
       router.refresh();
     } catch (error) {
       setErrorMessage(
-        error instanceof Error
-          ? error.message
-          : "The document could not be deleted. Please try again.",
+        getUserFacingErrorMessage(
+          error,
+          "We couldn't delete this document. Please try again.",
+        ),
       );
     } finally {
       setIsDeleting(false);

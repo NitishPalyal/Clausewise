@@ -8,6 +8,7 @@ import {
   getDocumentPreviewUrl,
   getDocxPreviewText,
 } from "@/lib/document-view.api";
+import { getUserFacingErrorMessage } from "@/lib/api-response";
 import type { DocumentPreviewVersion } from "@/types/document-types";
 
 export function DocumentPreview({
@@ -49,9 +50,10 @@ export function DocumentPreview({
       .catch((error: unknown) => {
         if (controller.signal.aborted) return;
         setErrorMessage(
-          error instanceof Error
-            ? error.message
-            : "The document preview could not be loaded.",
+          getUserFacingErrorMessage(
+            error,
+            "We couldn't load this document preview. Please try again.",
+          ),
         );
       })
       .finally(() => {
