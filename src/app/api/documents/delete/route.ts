@@ -78,8 +78,6 @@ export async function DELETE(request: NextRequest) {
       data: null,
       error: {
         code: "DOCUMENT_DELETE_FAILED",
-        ...(process.env.NODE_ENV === "development" &&
-          error instanceof Error && { details: error.message }),
       },
     };
 
