@@ -1,35 +1,37 @@
 import { prisma } from "@/lib/prisma";
 
-export async function createChat(userId: string, title: string) {
+export async function createChat(clerkUserId: string, title: string) {
   const newChat = await prisma.chat.create({
     data: {
       title,
-      userId,
+      user: {
+        connect: { clerkUserId },
+      },
     },
   });
   return newChat.id;
 }
 
-export async function findChat(id: string, userId: string) {
-  return await prisma.chat.findUnique({
+export async function findChat(id: string, clerkUserId: string) {
+  return await prisma.chat.findFirst({
     where: {
       id,
-      userId,
+      user: { clerkUserId },
     },
   });
 }
-export async function findChats(userId: string) {
+export async function findChats(clerkUserId: string) {
   return await prisma.chat.findMany({
     where: {
-      userId,
+      user: { clerkUserId },
     },
   });
 }
-export async function deleteChat(id: string, userId: string) {
-  return await prisma.chat.delete({
+export async function deleteChat(id: string, clerkUserId: string) {
+  return await prisma.chat.deleteMany({
     where: {
-      userId,
       id,
+      user: { clerkUserId },
     },
   });
 }
