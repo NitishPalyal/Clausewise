@@ -30,7 +30,8 @@ export function DocumentPreview({
   const [errorMessage, setErrorMessage] = useState("");
   const [retryCount, setRetryCount] = useState(0);
   const selectedVersion =
-    versions.find((version) => version.id === selectedVersionId) ?? initialVersion;
+    versions.find((version) => version.id === selectedVersionId) ??
+    initialVersion;
 
   useEffect(() => {
     if (!selectedVersion || selectedVersion.fileType !== "docx") {
@@ -168,7 +169,10 @@ export function DocumentPreview({
         </div>
       ) : (
         <div className="flex min-h-[28rem] flex-col items-center justify-center gap-3 p-6 text-center">
-          <FileText className="size-8 text-muted-foreground" aria-hidden="true" />
+          <FileText
+            className="size-8 text-muted-foreground"
+            aria-hidden="true"
+          />
           <div>
             <p className="text-sm font-medium">Preview is unavailable</p>
             <p className="mt-1 text-sm text-muted-foreground">
