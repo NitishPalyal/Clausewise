@@ -112,12 +112,7 @@ export async function POST(request: NextRequest) {
       tenantId,
       chatId,
     );
-    await MessageRepo.createMessage(
-      chatId,
-      "ai",
-      aiResponse.answer,
-      citations,
-    );
+    await MessageRepo.createMessage(chatId, "ai", aiResponse.answer, citations);
     // Notify the user's connected devices that an AI reply is ready.
     try {
       await publishChatReplyReady({
