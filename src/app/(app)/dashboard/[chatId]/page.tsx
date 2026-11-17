@@ -7,6 +7,7 @@ import { ChatInput } from "@/components/dashboard/chat-input";
 import { ChatMessageItem } from "@/components/dashboard/chat-message";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import type { ChatMessage } from "@/types/chat-types";
+import { useSocket } from "../../../../../socket/socketProvider";
 import {
   fetchApiResponse,
   getUserFacingErrorMessage,
@@ -15,6 +16,7 @@ import {
 export default function ChatPage() {
   const { chatId } = useParams<{ chatId: string }>();
   const { orgId } = useAuth();
+  const { socket } = useSocket();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputValue, setInputValue] = useState("");
   const [isLoading, setIsLoading] = useState(true);
@@ -71,6 +73,51 @@ export default function ChatPage() {
     void loadMessages();
     return () => controller.abort();
   }, [chatId]);
+
+  useEffect(() => {
+    if (!socket) return;
+
+    async function handleChatReplyReady(payload: { chatId?: unknown }) {
+      // Ignore notifications belonging to other conversations.
+      if (payload?.chatId !== chatId) return;
+
+      try {
+        const result = await fetchApiResponse<{
+          messages: {
+            id: string;
+            role: string;
+            content: string;
+            timestamp: string;
+            citations?: NonNullable<ChatMessage["citations"]> | null;
+          }[];
+        }>(
+          `/api/chat/getMessages?chatId=${encodeURIComponent(chatId)}`,
+          {},
+          "We couldn't refresh this conversation.",
+        );
+
+        setMessages(
+          result.data.messages.map((message) => ({
+            id: message.id,
+            role: message.role === "user" ? "user" : "assistant",
+            content: message.content,
+            timestamp: new Date(message.timestamp),
+            ...(message.citations?.length
+              ? { citations: message.citations }
+              : {}),
+          })),
+        );
+      } catch (error) {
+        console.error("Failed to refresh chat messages:", error);
+      }
+    }
+
+    socket.on("chat:reply-ready", handleChatReplyReady);
+
+    return () => {
+      socket.off("chat:reply-ready", handleChatReplyReady);
+    };
+  }, [socket, chatId]);
 
   const handleSend = async () => {
     const query = inputValue.trim();
