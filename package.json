@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "next dev --webpack",
     "server": "npx tsx watch socket/socket.server.ts",
-    "build": "npm run db:generate && next build",
+    "build": "npm run db:generate && tsc",
     "start": "next start",
     "db:migrate": "prisma migrate dev",
     "db:deploy": "prisma migrate deploy",
