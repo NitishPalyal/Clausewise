@@ -10,6 +10,10 @@ const API_ERROR_MESSAGES = new Map<string, string>([
     "We couldn't send your message right now. Please try again shortly.",
   ],
   [
+    "AI_SERVICE_UNAVAILABLE",
+    "Our AI service is busy right now. Please try again in a moment.",
+  ],
+  [
     "DOCUMENT_DELETE_FAILED",
     "We couldn't delete this document right now. Please try again.",
   ],

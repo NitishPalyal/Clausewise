@@ -35,6 +35,22 @@ describe("API response handling", () => {
     );
   });
 
+  it("shows a clear message when the AI provider is temporarily unavailable", async () => {
+    const response = Response.json(
+      {
+        success: false,
+        message: "Internal provider error",
+        data: null,
+        error: { code: "AI_SERVICE_UNAVAILABLE" },
+      },
+      { status: 503 },
+    );
+
+    await expect(readApiResponse(response, "Request failed.")).rejects.toThrow(
+      "Our AI service is busy right now. Please try again in a moment.",
+    );
+  });
+
   it("does not expose server exceptions from a JSON error response", async () => {
     const response = Response.json(
       {

@@ -10,6 +10,7 @@ import { APIResponse } from "@/shared/types";
 import type { Citation } from "@/retrievalPipeline/citations/citations.types";
 import { publishChatReplyReady } from "@/lib/redis/chatNotification";
 import { prisma } from "@/lib/prisma";
+import { isAiServiceUnavailable } from "@/lib/ai-errors";
 
 /** Saves the user's message, runs retrieval, and returns an answer with citations. */
 export async function POST(request: NextRequest) {
@@ -111,7 +112,12 @@ export async function POST(request: NextRequest) {
       tenantId,
       chatId,
     );
-    await MessageRepo.createMessage(chatId, "ai", aiResponse.answer);
+    await MessageRepo.createMessage(
+      chatId,
+      "ai",
+      aiResponse.answer,
+      citations,
+    );
     // Notify the user's connected devices that an AI reply is ready.
     try {
       await publishChatReplyReady({
@@ -139,6 +145,15 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(response, { status: 200 });
   } catch (error) {
+    if (isAiServiceUnavailable(error)) {
+      console.error("Chat AI service is temporarily unavailable", error);
+      return errorResponse(
+        "Our AI service is busy right now. Please try again in a moment.",
+        "AI_SERVICE_UNAVAILABLE",
+        503,
+      );
+    }
+
     console.error("Chat message API failed", error);
     return errorResponse(
       "We couldn't send your message right now. Please try again shortly.",

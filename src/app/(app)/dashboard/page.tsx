@@ -114,7 +114,7 @@ export default function DashboardPage() {
       {/* ── Chat area ─────────────────────────────────────────────────────── */}
       {hasMessages ? (
         <ScrollArea className="flex-1 chat-scroll">
-          <div className="max-w-3xl mx-auto px-4 py-6 space-y-6">
+          <div className="mx-auto w-full max-w-5xl space-y-6 px-4 py-6 sm:px-6">
             {messages.map((message) => (
               <ChatMessageItem key={message.id} message={message} />
             ))}

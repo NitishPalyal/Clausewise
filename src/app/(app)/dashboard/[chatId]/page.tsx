@@ -1,7 +1,6 @@
 "use client";
 
-import { useState } from "react";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useAuth } from "@clerk/nextjs";
 import { useParams } from "next/navigation";
 import { ChatInput } from "@/components/dashboard/chat-input";
@@ -35,6 +34,7 @@ export default function ChatPage() {
             role: string;
             content: string;
             timestamp: string;
+            citations?: NonNullable<ChatMessage["citations"]> | null;
           }[];
         }>(
           `/api/chat/getMessages?chatId=${encodeURIComponent(chatId)}`,
@@ -48,6 +48,9 @@ export default function ChatPage() {
             role: message.role === "user" ? "user" : "assistant",
             content: message.content,
             timestamp: new Date(message.timestamp),
+            ...(message.citations?.length
+              ? { citations: message.citations }
+              : {}),
           })),
         );
       } catch (loadError) {
@@ -144,7 +147,7 @@ export default function ChatPage() {
   return (
     <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
       <ScrollArea className="flex-1">
-        <div className="mx-auto max-w-3xl space-y-8 px-4 py-8">
+        <div className="mx-auto w-full max-w-5xl space-y-6 px-4 py-8 sm:px-6">
           {isLoading && (
             <p className="text-sm text-muted-foreground" role="status">
               Loading chat…

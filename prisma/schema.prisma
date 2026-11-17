@@ -125,6 +125,7 @@ model Message {
   chatId    String
   role      MessageRole
   content   String
+  citations Json?
   timestamp DateTime    @default(now())
 
   chat Chat @relation(fields: [chatId], references: [id], onDelete: Cascade)
