@@ -6,6 +6,7 @@ import { FileText, FolderOpen, Plus, SearchCode } from "lucide-react";
 import { OrganizationSwitcher, UserButton } from "@clerk/nextjs";
 import { Button } from "@/components/ui/button";
 import { useClerkAppearance } from "@/hooks/use-clerk-appearance";
+import { useSocket } from "../../../socket/socketProvider";
 import {
   Sidebar,
   SidebarContent,
@@ -33,6 +34,7 @@ export function ChatSidebar() {
   const clerkAppearance = useClerkAppearance();
   const [chats, setChats] = useState<ChatSummary[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const { socket } = useSocket();
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -45,11 +47,14 @@ export function ChatSidebar() {
           { signal: controller.signal },
           "We couldn't load your conversations.",
         );
+
         setChats(result.data.chats);
+        setError(null);
       } catch (loadError) {
         if (loadError instanceof Error && loadError.name === "AbortError") {
           return;
         }
+
         setError(
           getUserFacingErrorMessage(
             loadError,
@@ -61,19 +66,27 @@ export function ChatSidebar() {
       }
     }
 
+    function handleChatReplyReady() {
+      void loadChats();
+    }
+
     void loadChats();
+
     window.addEventListener("clausewise:chats-updated", loadChats);
+    socket?.on("chat:reply-ready", handleChatReplyReady);
+
     return () => {
       controller.abort();
       window.removeEventListener("clausewise:chats-updated", loadChats);
+      socket?.off("chat:reply-ready", handleChatReplyReady);
     };
-  }, []);
+  }, [socket]);
 
   return (
     <Sidebar collapsible="icon" className="border-r border-sidebar-border">
       <SidebarHeader className="gap-4 px-3 py-4">
         <div className="flex items-center gap-2.5">
-          <span           className="flex size-8 shrink-0 items-center justify-center rounded-md bg-primary text-primary-foreground">
+          <span className="flex size-8 shrink-0 items-center justify-center rounded-md bg-primary text-primary-foreground">
             <SearchCode className="size-4" />
           </span>
           <div className="group-data-[collapsible=icon]:hidden">
@@ -120,7 +133,10 @@ export function ChatSidebar() {
         <SidebarGroup>
           <SidebarGroupContent>
             {isLoading ? (
-              <p className="px-3 py-4 text-sm text-muted-foreground" role="status">
+              <p
+                className="px-3 py-4 text-sm text-muted-foreground"
+                role="status"
+              >
                 Loading chats…
               </p>
             ) : error ? (
