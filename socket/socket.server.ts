@@ -83,15 +83,33 @@ chatNotificationSubscriber.on("message", (channel, message) => {
   }
 });
 
-// Subscribe to AI reply notifications.
-void chatNotificationSubscriber
-  .subscribe(CHAT_NOTIFICATION_CHANNEL)
-  .then(() => {
+// Start the Socket.IO server only after Redis subscription is ready.
+async function startSocketServer(): Promise<void> {
+  try {
+    // Wait until Redis confirms the subscription.
+    await chatNotificationSubscriber.subscribe(CHAT_NOTIFICATION_CHANNEL);
+
     console.log("Subscribed to chat notification channel");
-  })
-  .catch((error: Error) => {
-    console.error("Failed to subscribe to chat notifications:", error);
-  });
+
+    // Start accepting client connections.
+    io.listen(PORT);
+
+    console.log(`Socket.IO server listening on port ${PORT}`);
+  } catch (error) {
+    console.error("Failed to start Socket.IO server:", error);
+
+    // Clean up resources if startup fails.
+    await Promise.allSettled([
+      stopDocumentQueueEvents(),
+      chatNotificationSubscriber.quit(),
+      prisma.$disconnect(),
+    ]);
+
+    process.exit(1);
+  }
+}
+
+void startSocketServer();
 
 // Handle authenticated socket connections.
 io.on("connection", async (socket) => {
@@ -110,9 +128,6 @@ io.on("connection", async (socket) => {
     console.log(`Socket disconnected: ${socket.id}. Reason: ${reason}`);
   });
 });
-
-// Start accepting connections.
-io.listen(PORT);
 
 // Gracefully close resources during shutdown.
 let isShuttingDown = false;
