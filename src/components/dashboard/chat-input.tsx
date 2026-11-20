@@ -12,10 +12,10 @@
  * - Disabled state while the assistant is loading
  */
 
-import { useRef } from "react";
 import { Send, Paperclip, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useDocumentUpload } from "@/components/documents/document-upload-provider";
+import { useEffect, useRef, useState } from "react";
 import {
   Tooltip,
   TooltipContent,
@@ -42,11 +42,23 @@ export function ChatInput({
   tenantId,
   placeholder = "Ask about a clause, vendor certificate, or audit finding…",
 }: ChatInputProps) {
+  const [hasMounted, setHasMounted] = useState(false);
+
+  useEffect(() => {
+    setHasMounted(true);
+  }, []);
   const openDocumentUpload = useDocumentUpload();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const charCount = value.length;
   const isOverLimit = charCount > MAX_CHARS;
   const canSend = value.trim().length > 0 && !isLoading && !isOverLimit;
+
+  const isAttachmentDisabled = !hasMounted || !tenantId || isLoading;
+
+  const attachmentLabel =
+    !hasMounted || !tenantId
+      ? "Select an organization to upload a document"
+      : "Upload a document";
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     // Ctrl+Enter or Cmd+Enter sends the message
@@ -74,50 +86,22 @@ export function ChatInput({
             : "border-border focus-within:border-primary/60 focus-within:ring-1 focus-within:ring-primary/20",
         )}
       >
-        {tenantId ? (
-          <Tooltip>
-            <TooltipTrigger
-              render={
-                <Button
-                  id="attach-file-button"
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  disabled={isLoading}
-                  className="mb-0.5 h-8 w-8 shrink-0 text-muted-foreground hover:text-foreground"
-                  aria-label="Upload a document"
-                  onClick={() => openDocumentUpload({ tenantId })}
-                >
-                  <Paperclip className="h-4 w-4" aria-hidden="true" />
-                </Button>
-              }
-            />
-            <TooltipContent side="top" className="text-xs">
-              Upload a document
-            </TooltipContent>
-          </Tooltip>
-        ) : (
-          <Tooltip>
-            <TooltipTrigger
-              render={
-                <Button
-                  id="attach-file-button"
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  disabled
-                  className="mb-0.5 h-8 w-8 shrink-0 text-muted-foreground hover:text-foreground"
-                  aria-label="Select an organization to upload a document"
-                >
-                  <Paperclip className="h-4 w-4" aria-hidden="true" />
-                </Button>
-              }
-            />
-            <TooltipContent side="top" className="text-xs">
-              Select an organization to upload a document
-            </TooltipContent>
-          </Tooltip>
-        )}
+        <span className="mb-0.5 shrink-0" title={attachmentLabel}>
+          <button
+            id="attach-file-button"
+            type="button"
+            disabled={isAttachmentDisabled}
+            aria-label={attachmentLabel}
+            onClick={() => {
+              if (isAttachmentDisabled || !tenantId) return;
+
+              openDocumentUpload({ tenantId });
+            }}
+            className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-transparent bg-transparent text-muted-foreground transition-all outline-none hover:bg-muted hover:text-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-50"
+          >
+            <Paperclip className="h-4 w-4" aria-hidden="true" />
+          </button>
+        </span>
 
         {/* Textarea */}
         <textarea
