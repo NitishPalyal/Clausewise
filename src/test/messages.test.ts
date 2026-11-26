@@ -1,6 +1,6 @@
 import { describe, it, expect, afterAll } from "vitest";
 import { prisma } from "@/lib/prisma";
-import { fetchHistory } from "@/repository/message/messages.repostory.ts";
+import { fetchHistory } from "@/repository/message/message.repository";
 
 afterAll(async () => {
   await prisma.$executeRaw`DELETE FROM "Message" WHERE "chatId" LIKE 't\\_%'`;

@@ -12,7 +12,7 @@ vi.mock("@/lib/prisma", () => ({
   },
 }));
 
-import { createMessage } from "@/repository/message/messages.repostory";
+import { createMessage } from "@/repository/message/message.repository";
 
 describe("createMessage", () => {
   afterEach(() => {

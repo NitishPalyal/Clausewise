@@ -6,7 +6,7 @@ import { GenerationResult } from "./generation/generation.types";
 import { rerankVectors } from "./rerank/rerank";
 import { rewriteStandalone } from "./rewrite/rewrite";
 import { vectorSearch } from "./vectorSearch/vectorSearch";
-import * as MessageRepo from "@/repository/message/messages.repostory";
+import * as MessageRepo from "@/repository/message/message.repository";
 
 /** Rewrites follow-ups, retrieves and ranks tenant documents, then builds cited output. */
 export async function retrievalPipeline(
