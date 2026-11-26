@@ -35,9 +35,6 @@ export function DocumentPreview({
 
   useEffect(() => {
     if (!selectedVersion || selectedVersion.fileType !== "docx") {
-      setPreviewText("");
-      setErrorMessage("");
-      setIsLoading(false);
       return;
     }
 
@@ -61,7 +58,12 @@ export function DocumentPreview({
         if (!controller.signal.aborted) setIsLoading(false);
       });
 
-    return () => controller.abort();
+    return () => {
+      controller.abort();
+      setPreviewText("");
+      setErrorMessage("");
+      setIsLoading(false);
+    };
   }, [documentId, selectedVersion?.fileType, selectedVersion?.id, retryCount]);
 
   if (!selectedVersion) {
