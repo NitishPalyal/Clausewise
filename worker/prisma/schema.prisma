@@ -61,6 +61,7 @@ model Document {
 
   @@index([tenantId, type])
 }
+
 enum Status {
   pending
   uploading
@@ -68,6 +69,7 @@ enum Status {
   uploaded
   delayed
 }
+
 model DocumentVersion {
   id            String    @id @default(cuid())
   documentId    String
@@ -77,7 +79,7 @@ model DocumentVersion {
   expiryDate    DateTime? // for vendor certificates
   status        Status    @default(pending)
   uploadedAt    DateTime  @default(now())
-  document      Document  @relation(fields: [documentId], references: [id])
+  document      Document  @relation(fields: [documentId], references: [id], onDelete: Cascade)
   chunks        Chunk[]
 
   @@index([documentId, isCurrent])
@@ -94,7 +96,7 @@ model Chunk {
   pageEnd           Int?
   text              String
   embedding         Unsupported("vector(768)")?
-  documentVersion   DocumentVersion             @relation(fields: [documentVersionId], references: [id])
+  documentVersion   DocumentVersion             @relation(fields: [documentVersionId], references: [id], onDelete: Cascade)
 
   @@index([tenantId])
 }
@@ -123,6 +125,7 @@ model Message {
   chatId    String
   role      MessageRole
   content   String
+  citations Json?
   timestamp DateTime    @default(now())
 
   chat Chat @relation(fields: [chatId], references: [id], onDelete: Cascade)
