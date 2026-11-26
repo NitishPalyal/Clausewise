@@ -33,12 +33,10 @@ export function SocketProvider({ children }: { children: ReactNode }) {
     // Wait until Clerk finishes loading the authentication session.
     if (!isLoaded) return;
 
-    // Do not connect users who are not signed in.
-    if (!isSignedIn) {
-      setSocket(null);
-      setStatus("disconnected");
-      return;
-    }
+    // Do not connect users who are not signed in. If a previous run created a
+    // real connection, that run's own cleanup below already reset socket/status
+    // and disconnected it before this run's body ever reaches this line.
+    if (!isSignedIn) return;
 
     const socketUrl = process.env.NEXT_PUBLIC_SOCKET_URL;
 
@@ -95,13 +93,16 @@ export function SocketProvider({ children }: { children: ReactNode }) {
     // Establish the connection.
     socketInstance.connect();
 
-    // Clean up when the provider unmounts or the session changes.
+    // Clean up when the provider unmounts, or right before the next run of
+    // this effect (e.g. isSignedIn flips to false) — this is what now resets
+    // socket/status, instead of a bare setState sitting in the branch above.
     return () => {
       socketInstance.off("connect", handleConnect);
       socketInstance.off("disconnect", handleDisconnect);
       socketInstance.off("connect_error", handleConnectError);
-
       socketInstance.disconnect();
+      setSocket(null);
+      setStatus("disconnected");
     };
   }, [getToken, isLoaded, isSignedIn]);
 
