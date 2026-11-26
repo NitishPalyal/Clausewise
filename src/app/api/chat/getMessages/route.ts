@@ -3,7 +3,7 @@ import { getMessageSchema } from "@/schema/chatApi.schema";
 import { auth } from "@clerk/nextjs/server";
 import { NextRequest, NextResponse } from "next/server";
 import * as ChatRepo from "@/repository/chat/chat.repository.ts";
-import * as MessageRepo from "@/repository/message/messages.repostory.ts";
+import * as MessageRepo from "@/repository/message/message.repository";
 import { APIResponse } from "@/shared/types";
 
 export async function GET(request: NextRequest) {

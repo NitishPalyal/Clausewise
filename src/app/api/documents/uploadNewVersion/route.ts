@@ -7,7 +7,7 @@ import { createDocumentVersionUploadSchema } from "@/schema/documentApi.schema.t
 import type { APIResponse, FileType } from "@/shared/types.ts";
 import * as DocumentRepo from "@/repository/document/document.repository.ts";
 import * as DocumentVersionRepo from "@/repository/documentVersion/documentVersion.repository.ts";
-import * as TenantRepo from "@/repository/tetant/tetant.repository.ts";
+import * as TenantRepo from "@/repository/tenant/tenant.repository.ts";
 import {
   deleteFromStorageService,
   uploadToStorageService,

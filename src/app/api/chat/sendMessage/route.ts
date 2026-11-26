@@ -4,7 +4,7 @@ import { generateChatName } from "@/service/chat.service";
 import { auth, currentUser } from "@clerk/nextjs/server";
 import { NextRequest, NextResponse } from "next/server";
 import * as ChatRepo from "@/repository/chat/chat.repository";
-import * as MessageRepo from "@/repository/message/messages.repostory.ts";
+import * as MessageRepo from "@/repository/message/message.repository";
 import { retrievalPipeline } from "@/retrievalPipeline/retrievalPipeline";
 import { APIResponse } from "@/shared/types";
 import type { Citation } from "@/retrievalPipeline/citations/citations.types";
