@@ -21,18 +21,43 @@ export async function POST(req: NextRequest) {
       },
     });
   }
+  if (event.type === "organization.deleted") {
+    if (!event.data.id) {
+      return new Response("Missing organization ID", { status: 400 });
+    }
 
-  if (event.type === "organizationMembership.created") {
+    await prisma.tenant.deleteMany({
+      where: { id: event.data.id },
+    });
+  }
+
+  if (event.type === "organizationMembership.deleted") {
+    await prisma.user.deleteMany({
+      where: {
+        clerkUserId: event.data.public_user_data.user_id,
+        tenantId: event.data.organization.id,
+      },
+    });
+  }
+
+  if (
+    event.type === "organizationMembership.created" ||
+    event.type === "organizationMembership.updated"
+  ) {
     const clerkRole = event.data.role;
+    const role = clerkRole === "org:admin" ? "MANAGER" : "MEMBER";
+    const clerkUserId = event.data.public_user_data.user_id;
+    const email = event.data.public_user_data.identifier;
+    const tenantId = event.data.organization.id;
 
     await prisma.user.upsert({
-      where: { clerkUserId: event.data.public_user_data.user_id },
-      update: { role: clerkRole === "org:admin" ? "MANAGER" : "MEMBER" },
+      where: { clerkUserId },
+      update: { email, tenantId, role },
       create: {
-        clerkUserId: event.data.public_user_data.user_id,
-        email: event.data.public_user_data.identifier,
-        tenantId: event.data.organization.id,
-        role: clerkRole === "org:admin" ? "MANAGER" : "MEMBER",
+        clerkUserId,
+        email,
+        tenantId,
+        role,
       },
     });
   }
